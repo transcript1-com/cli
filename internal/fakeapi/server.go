@@ -27,6 +27,7 @@ type Server struct {
 	MinutesPerJob   int
 	ChunkStatus     map[int][]int
 	CompleteMissing []int
+	CompleteDrop    bool
 	FailCode        string
 	Titles          map[string]string
 	BlockChunks     chan struct{}
@@ -34,20 +35,21 @@ type Server struct {
 	PollErrorStatus int
 	PollDrop        bool
 
-	mu         sync.Mutex
-	pollErrors int
-	srv        *httptest.Server
-	closing    chan struct{}
-	jobs       map[string]*job
-	order      []*job
-	nextID     int
-	nextToken  int
-	requests   []*Request
-	chunkCalls map[int]int
-	completes  int
-	inFlight   int
-	peakChunks int
-	peakActive int
+	mu              sync.Mutex
+	pollErrors      int
+	srv             *httptest.Server
+	closing         chan struct{}
+	jobs            map[string]*job
+	order           []*job
+	nextID          int
+	nextToken       int
+	requests        []*Request
+	chunkCalls      map[int]int
+	completes       int
+	inFlight        int
+	peakChunks      int
+	peakActive      int
+	completeDropped bool
 }
 
 func New(t testing.TB) *Server {

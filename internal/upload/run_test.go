@@ -323,6 +323,51 @@ func TestUploadIncompleteResent(t *testing.T) {
 	})
 }
 
+func TestUploadLostCompleteRecovered(t *testing.T) {
+	srv, c, in, data := setup(t, "talk.mp3")
+	srv.CompleteDrop = true
+	srv.Polls = 3
+	tr, err := Run(context.Background(), c, in, Options{IdempotencyKey: "idem-1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	log := srv.Log()
+
+	t.Run("retries the complete, then reads the job behind the refusal", func(t *testing.T) {
+		if n := countPrefix(log, "POST /v1/transcriptions/"+tr.ID+"/upload/complete"); n != 2 {
+			t.Fatalf("log %v", log)
+		}
+
+		if last := log[len(log)-1]; last != "GET /v1/transcriptions/"+tr.ID {
+			t.Fatalf("log %v", log)
+		}
+	})
+
+	t.Run("returns the running transcription the read found", func(t *testing.T) {
+		if tr.Status != api.StatusTranscribing {
+			t.Fatalf("status %q", tr.Status)
+		}
+
+		if !bytes.Equal(srv.Uploaded(tr.ID), data) {
+			t.Fatalf("status %q", tr.Status)
+		}
+	})
+}
+
+func TestUploadLostCompleteOnEndedJob(t *testing.T) {
+	srv, c, in, _ := setup(t, "talk.mp3")
+	srv.CompleteDrop = true
+	srv.FailCode = api.CodeNoSpeech
+	_, err := Run(context.Background(), c, in, Options{IdempotencyKey: "idem-1"})
+
+	t.Run("keeps invalid_state when the job behind the refusal is not running", func(t *testing.T) {
+		if !api.IsCode(err, api.CodeInvalidState) {
+			t.Fatalf("got %v", err)
+		}
+	})
+}
+
 func TestUploadCanceled(t *testing.T) {
 	srv, c, in, _ := setup(t, "talk.mp3")
 	srv.BlockChunks = make(chan struct{})

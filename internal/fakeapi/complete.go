@@ -52,6 +52,14 @@ func (s *Server) getProgress(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (s *Server) shouldDropComplete() bool {
+	if !s.CompleteDrop {
+		return false
+	}
+
+	return !s.completeDropped
+}
+
 func (s *Server) complete(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -87,5 +95,10 @@ func (s *Server) complete(w http.ResponseWriter, r *http.Request) {
 	j.token = ""
 	s.charge(j)
 	s.recordPeak()
+	if s.shouldDropComplete() {
+		s.completeDropped = true
+		panic(http.ErrAbortHandler)
+	}
+
 	writeJSON(w, http.StatusAccepted, s.serialize(j, false))
 }

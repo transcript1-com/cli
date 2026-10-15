@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/transcript1/cli/internal/api"
 )
@@ -34,9 +35,32 @@ func (u *uploader) complete(ctx context.Context) (*api.Transcription, error) {
 	return u.completeOnce(ctx)
 }
 
+// the first answer may be lost, so the job may already exist
+func (u *uploader) findStarted(ctx context.Context, err error) (*api.Transcription, error) {
+	t, getErr := u.c.Get(ctx, u.id, 0)
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+
+	if getErr != nil {
+		return nil, err
+	}
+
+	started := []string{api.StatusQueued, api.StatusFetching, api.StatusTranscribing, api.StatusCompleted}
+	if !slices.Contains(started, t.Status) {
+		return nil, err
+	}
+
+	return t, nil
+}
+
 func (u *uploader) completeOnce(ctx context.Context) (*api.Transcription, error) {
 	for {
 		t, err := u.c.CompleteUpload(ctx, u.id)
+		if api.IsCode(err, api.CodeInvalidState) {
+			return u.findStarted(ctx, err)
+		}
+
 		busy, ok := api.SlotBusy(err)
 		if !ok {
 			return t, err
