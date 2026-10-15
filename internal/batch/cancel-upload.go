@@ -33,6 +33,19 @@ func (r *runner) cancelUpload(res Result) Result {
 
 	ctx, cancel := context.WithTimeout(context.Background(), cancelUploadTimeout)
 	defer cancel()
+	t, err := r.c.Get(ctx, res.T.ID, 0)
+	if err != nil {
+		res.Err = fmt.Errorf(errCancelUpload, res.T.ID, err)
+		return res
+	}
+
+	if t.Status != api.StatusAwaitingUpload {
+		res.Status = StillRunning
+		res.T = t
+
+		return res
+	}
+
 	if err := r.c.Delete(ctx, res.T.ID); err != nil {
 		res.Err = fmt.Errorf(errCancelUpload, res.T.ID, err)
 	}

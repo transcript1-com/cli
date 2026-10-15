@@ -21,7 +21,7 @@ func TestLinkText(t *testing.T) {
 	res := run(t, c, buildLink(rickID), Options{})
 	reqs := srv.Requests()
 
-	t.Run("creates with reuse and wait, polls with wait, then renders text", func(t *testing.T) {
+	t.Run("creates with reuse and no wait, polls with wait, then renders text", func(t *testing.T) {
 		if want := []string{postPath, getPath, getPath}; !slices.Equal(srv.Log(), want) {
 			t.Fatalf("log %v", srv.Log())
 		}
@@ -30,7 +30,7 @@ func TestLinkText(t *testing.T) {
 			t.Fatalf("create query %v", reqs[0].Query)
 		}
 
-		if reqs[0].Query.Get("wait") != "60" {
+		if reqs[0].Query.Get("wait") != "0" {
 			t.Fatalf("create query %v", reqs[0].Query)
 		}
 

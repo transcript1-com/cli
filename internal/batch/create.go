@@ -52,7 +52,7 @@ func (r *runner) createOnce(ctx context.Context, key string) (*api.Transcription
 		Diarize:  r.opt.Speakers,
 	}
 
-	return r.c.CreateLink(ctx, key, r.in.URL, opt, waitSeconds, !r.opt.Fresh)
+	return r.c.CreateLink(ctx, key, r.in.URL, opt, 0, !r.opt.Fresh)
 }
 
 func (r *runner) upload(ctx context.Context, key string) (*api.Transcription, error) {

@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/transcript1/cli/internal/api"
 )
 
 type failDelete struct {
@@ -72,6 +74,38 @@ func TestCancelUpload(t *testing.T) {
 
 		if !strings.Contains(res.Err.Error(), "tr_1") {
 			t.Fatalf("result %+v", res)
+		}
+	})
+
+	t.Run("leaves an upload that already started and reports it still running", func(t *testing.T) {
+		srv, c := setup(t)
+		started := run(t, c, buildFileInput(t, "talk.mp3"), Options{NoWait: true})
+		r := newRunner(c, 0, started.Input, Options{}, false, nil)
+		left := &api.Transcription{
+			ID:     started.T.ID,
+			Status: api.StatusAwaitingUpload,
+		}
+		res := r.cancelUpload(Result{Status: Interrupted, T: left})
+		if res.Status != StillRunning {
+			t.Fatalf("result %+v", res)
+		}
+
+		if res.Err != nil {
+			t.Fatalf("result %+v", res)
+		}
+
+		if res.T.ID != started.T.ID {
+			t.Fatalf("result %+v", res)
+		}
+
+		if res.T.Status == api.StatusAwaitingUpload {
+			t.Fatalf("result %+v", res)
+		}
+
+		for _, line := range srv.Log() {
+			if strings.HasPrefix(line, "DELETE ") {
+				t.Fatalf("log %v", srv.Log())
+			}
 		}
 	})
 

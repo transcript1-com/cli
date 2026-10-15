@@ -231,6 +231,31 @@ func TestInterrupted(t *testing.T) {
 		}
 	})
 
+	t.Run("reports a link still running when canceled right after the create", func(t *testing.T) {
+		srv, c := setup(t)
+		srv.Polls = 100
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		emit := func(ev Event) {
+			if ev.Stage == Queued {
+				cancel()
+			}
+		}
+
+		res := runOne(ctx, c, 0, buildLink(rickID), Options{}, false, emit)
+		if res.Status != StillRunning {
+			t.Fatalf("result %+v", res)
+		}
+
+		if res.T == nil {
+			t.Fatalf("result %+v", res)
+		}
+
+		if res.T.ID != "tr_1" {
+			t.Fatalf("result %+v", res)
+		}
+	})
+
 	t.Run("reports a job still running when canceled while waiting", func(t *testing.T) {
 		srv, c := setup(t)
 		srv.Polls = 100

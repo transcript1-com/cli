@@ -15,11 +15,7 @@ type createLinkBody struct {
 }
 
 func (c *Client) CreateLink(ctx context.Context, idemKey, link string, opt CreateOptions, wait int, reuse bool) (*Transcription, error) {
-	query := url.Values{}
-	if wait > 0 {
-		query.Set("wait", strconv.Itoa(wait))
-	}
-
+	query := url.Values{"wait": {strconv.Itoa(wait)}}
 	if reuse {
 		query.Set("reuse_recent", "true")
 	}

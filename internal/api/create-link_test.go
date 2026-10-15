@@ -65,7 +65,7 @@ func TestCreateLinkRequest(t *testing.T) {
 		}
 	})
 
-	t.Run("omits reuse_recent and wait when not asked for", func(t *testing.T) {
+	t.Run("omits reuse_recent when not asked for and sends wait=0", func(t *testing.T) {
 		if _, err := c.CreateLink(context.Background(), "idem-2", url, CreateOptions{}, 0, false); err != nil {
 			t.Fatal(err)
 		}
@@ -75,7 +75,7 @@ func TestCreateLinkRequest(t *testing.T) {
 			t.Fatalf("query %v", q)
 		}
 
-		if q.Has("wait") {
+		if q.Get("wait") != "0" {
 			t.Fatalf("query %v", q)
 		}
 	})
@@ -185,8 +185,12 @@ func TestCreateDoesNotRetry429(t *testing.T) {
 
 func TestTerminal(t *testing.T) {
 	for status, want := range map[string]bool{
-		StatusCompleted: true, StatusFailed: true, StatusCanceled: true,
-		"queued": false, "processing": false, "awaiting_upload": false,
+		StatusCompleted:   true,
+		StatusFailed:      true,
+		StatusCanceled:    true,
+		"queued":          false,
+		"processing":      false,
+		"awaiting_upload": false,
 	} {
 		t.Run(status, func(t *testing.T) {
 			if (&Transcription{Status: status}).Terminal() != want {

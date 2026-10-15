@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -216,7 +217,7 @@ func (c *Client) buildURL(path string, query url.Values) string {
 }
 
 func getTimeout(query url.Values) time.Duration {
-	if query.Has("wait") {
+	if wait, _ := strconv.Atoi(query.Get("wait")); wait > 0 {
 		return waitTimeout
 	}
 
