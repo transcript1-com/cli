@@ -60,7 +60,16 @@ func (ss *session) finish(ctx context.Context, results []batch.Result, authErr e
 
 	ss.printSignInHint(results, authErr)
 
-	return getExitCode(ctx, results, authErr)
+	code := getExitCode(ctx, results, authErr)
+	if code != exitOK {
+		return code
+	}
+
+	if ss.out.hasFailed() {
+		return exitFailed
+	}
+
+	return code
 }
 
 func (ss *session) printStillRunning(results []batch.Result) {

@@ -10,19 +10,13 @@ import (
 	"golang.org/x/term"
 )
 
-const exitInterrupted = 130
-
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	restore := buildTerminalRestore()
 	signals := make(chan os.Signal, 2)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-signals
-		cancel()
-		<-signals
-		os.Exit(exitInterrupted)
-	}()
+	go handleSignals(signals, cancel, restore, os.Exit)
 
 	env := cli.Env{
 		Stdin:      os.Stdin,
@@ -35,6 +29,7 @@ func main() {
 	}
 	code := cli.Run(ctx, os.Args[1:], env)
 	cancel()
+	restore()
 	os.Exit(code)
 }
 

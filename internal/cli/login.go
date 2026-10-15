@@ -31,7 +31,11 @@ func login(ctx context.Context, args []string, env Env) int {
 		return env.failUsage(errLoginArgs)
 	}
 
-	key, err := readKey(env)
+	key, err := readKey(ctx, env)
+	if ctx.Err() != nil {
+		return exitInterrupted
+	}
+
 	if err != nil {
 		return env.failUsage(fmt.Errorf(errReadKeyTemplate, err))
 	}
@@ -43,6 +47,10 @@ func login(ctx context.Context, args []string, env Env) int {
 	account, err := api.New(config.APIURL(env.Getenv), key).Account(ctx)
 	if api.IsCode(err, api.CodeUnauthorized, api.CodeInsufficientScope) {
 		return env.failUsage(errKeyRejected)
+	}
+
+	if ctx.Err() != nil {
+		return exitInterrupted
 	}
 
 	if err != nil {
@@ -81,13 +89,32 @@ func isReadError(err error) bool {
 	return !errors.Is(err, io.EOF)
 }
 
-func readKey(env Env) (string, error) {
-	if canReadSecret(env) {
-		fmt.Fprintf(env.Stderr, msgKeyPrompt, tokensURL)
-		key, err := env.ReadSecret()
-		fmt.Fprintln(env.Stderr)
+// the hidden read cannot be interrupted, so run it aside
+func readSecret(ctx context.Context, env Env) (string, error) {
+	type answer struct {
+		key string
+		err error
+	}
 
-		return strings.TrimSpace(key), err
+	fmt.Fprintf(env.Stderr, msgKeyPrompt, tokensURL)
+	done := make(chan answer, 1)
+	go func() {
+		key, err := env.ReadSecret()
+		done <- answer{key, err}
+	}()
+
+	defer fmt.Fprintln(env.Stderr)
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	case a := <-done:
+		return strings.TrimSpace(a.key), a.err
+	}
+}
+
+func readKey(ctx context.Context, env Env) (string, error) {
+	if canReadSecret(env) {
+		return readSecret(ctx, env)
 	}
 
 	line, err := bufio.NewReader(env.Stdin).ReadString('\n')

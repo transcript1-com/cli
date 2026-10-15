@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"testing"
 
 	"github.com/transcript1/cli/internal/config"
@@ -83,6 +84,39 @@ func TestLoginOnTerminal(t *testing.T) {
 
 	expectContains(t, got.stderr, "API key")
 	if key := loadSavedKey(t); key != "t1_test" {
+		t.Fatalf("saved key %q", key)
+	}
+}
+
+func TestLoginInterrupted(t *testing.T) {
+	h := newHarness(t)
+	asked := make(chan struct{})
+	release := make(chan struct{})
+	t.Cleanup(func() { close(release) })
+	h.secret = func() (string, error) {
+		close(asked)
+		<-release
+
+		return "", nil
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go func() {
+		<-asked
+		cancel()
+	}()
+
+	got := h.runWith(ctx, "login")
+	if got.code != 130 {
+		t.Fatalf("code %d stderr %q log %v", got.code, got.stderr, h.srv.Log())
+	}
+
+	if len(h.srv.Log()) != 0 {
+		t.Fatalf("code %d stderr %q log %v", got.code, got.stderr, h.srv.Log())
+	}
+
+	if key := loadSavedKey(t); key != "" {
 		t.Fatalf("saved key %q", key)
 	}
 }

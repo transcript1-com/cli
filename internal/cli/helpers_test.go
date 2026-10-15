@@ -2,7 +2,10 @@ package cli
 
 import (
 	"bytes"
+	"cmp"
 	"context"
+	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,6 +31,13 @@ type harness struct {
 	env    map[string]string
 	stdin  string
 	secret func() (string, error)
+	stdout io.Writer
+}
+
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) {
+	return 0, errors.New("write /dev/stdout: broken pipe")
 }
 
 type outcome struct {
@@ -55,7 +65,7 @@ func (h *harness) runWith(ctx context.Context, args ...string) outcome {
 	var stdout, stderr bytes.Buffer
 	env := Env{
 		Stdin:      strings.NewReader(h.stdin),
-		Stdout:     &stdout,
+		Stdout:     cmp.Or[io.Writer](h.stdout, &stdout),
 		Stderr:     &stderr,
 		Getenv:     func(name string) string { return h.env[name] },
 		StdinTTY:   h.secret != nil,
@@ -101,6 +111,17 @@ func (h *harness) exists(name string) bool {
 
 func (h *harness) writeMedia(name string) string {
 	return h.write(name, "0123456789abcdefghij")
+}
+
+func countLines(text, part string) int {
+	n := 0
+	for _, line := range strings.Split(text, "\n") {
+		if strings.Contains(line, part) {
+			n++
+		}
+	}
+
+	return n
 }
 
 func expectContains(t *testing.T, got string, parts ...string) {

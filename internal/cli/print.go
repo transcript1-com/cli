@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/transcript1/cli/internal/batch"
+	"github.com/transcript1/cli/internal/inputs"
 	"github.com/transcript1/cli/internal/output"
 )
 
@@ -14,6 +15,7 @@ type printer struct {
 	out  io.Writer
 	errw io.Writer
 	json bool
+	err  error
 }
 
 func (p *printer) shouldPrintLine(e batch.Event) bool {
@@ -35,17 +37,45 @@ func (p *printer) handleEvent(e batch.Event) {
 
 	line, err := output.JSONLine(*e.Result)
 	if err != nil {
-		fmt.Fprintln(p.errw, output.ErrorLine(output.Display(e.Input), err))
+		p.fail(e.Input, err)
 		return
 	}
 
-	p.write(line)
+	p.write(e.Input, line)
 }
 
-func (p *printer) write(data []byte) {
+func (p *printer) write(in inputs.Input, data []byte) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	_, _ = p.out.Write(data)
+	if p.err != nil {
+		return
+	}
+
+	if _, err := p.out.Write(data); err != nil {
+		p.recordError(in, err)
+	}
+}
+
+func (p *printer) fail(in inputs.Input, err error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.recordError(in, err)
+}
+
+func (p *printer) recordError(in inputs.Input, err error) {
+	if p.err != nil {
+		return
+	}
+
+	p.err = err
+	fmt.Fprintln(p.errw, output.ErrorLine(output.Display(in), err))
+}
+
+func (p *printer) hasFailed() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	return p.err != nil
 }
 
 func (p *printer) shouldPrintID(res batch.Result) bool {
@@ -63,11 +93,11 @@ func (p *printer) shouldPrintID(res batch.Result) bool {
 func (p *printer) printResults(results []batch.Result) {
 	for _, res := range results {
 		if p.shouldPrintID(res) {
-			p.write([]byte(res.T.ID + " " + res.T.Status + "\n"))
+			p.write(res.Input, []byte(res.T.ID+" "+res.T.Status+"\n"))
 		}
 
 		if len(res.Body) > 0 {
-			p.write(res.Body)
+			p.write(res.Input, res.Body)
 		}
 	}
 }
