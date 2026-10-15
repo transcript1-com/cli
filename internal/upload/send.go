@@ -3,10 +3,13 @@ package upload
 import (
 	"context"
 	"io"
+	"net/http"
 	"sync"
 
 	"github.com/transcript1/cli/internal/api"
 )
+
+const msgTokenRefused = "the upload token was refused after renewing it twice"
 
 func (u *uploader) send(parent context.Context, chunks []api.Chunk) error {
 	ctx, cancel := context.WithCancelCause(parent)
@@ -70,7 +73,7 @@ func (u *uploader) sendChunk(ctx context.Context, chunk api.Chunk) error {
 		}
 
 		if renewals == maxRenewals {
-			return err
+			return buildTokenRefused()
 		}
 
 		renewed, err := u.renew(ctx, gen)
@@ -84,4 +87,13 @@ func (u *uploader) sendChunk(ctx context.Context, chunk api.Chunk) error {
 	}
 
 	return nil
+}
+
+// a refused chunk token is not a bad api key
+func buildTokenRefused() error {
+	return &api.Error{
+		Status:  http.StatusUnauthorized,
+		Code:    api.CodeUploadTokenRefused,
+		Message: msgTokenRefused,
+	}
 }

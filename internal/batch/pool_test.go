@@ -196,6 +196,31 @@ func TestUnauthorizedStops(t *testing.T) {
 	})
 }
 
+func TestRefusedChunkToken(t *testing.T) {
+	srv, c := setup(t)
+	srv.ChunkStatus = map[int][]int{1: {401, 401, 401}}
+	ins := []inputs.Input{buildFileInput(t, "talk.mp3"), buildLink(rickID)}
+	results, err := Run(context.Background(), c, ins, Options{Jobs: 2}, nil)
+
+	t.Run("fails only the file and keeps the run going", func(t *testing.T) {
+		if err != nil {
+			t.Fatalf("err %v", err)
+		}
+
+		if results[0].Status != Failed {
+			t.Fatalf("file %+v", results[0])
+		}
+
+		if !api.IsCode(results[0].Err, api.CodeUploadTokenRefused) {
+			t.Fatalf("file %+v", results[0])
+		}
+
+		if results[1].Status != Done {
+			t.Fatalf("link %+v", results[1])
+		}
+	})
+}
+
 func waitForChunk(srv *fakeapi.Server) {
 	deadline := time.Now().Add(5 * time.Second)
 	for srv.PeakChunks() == 0 {

@@ -32,3 +32,7 @@ const (
 	CodeFetchFailed         = "fetch_failed"
 	CodeTranscriptionFailed = "transcription_failed"
 )
+
+const (
+	CodeUploadTokenRefused = "upload_token_refused"
+)

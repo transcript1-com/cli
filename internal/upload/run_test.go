@@ -256,9 +256,26 @@ func TestUploadTokenRenewalLimit(t *testing.T) {
 	srv.ChunkStatus = map[int][]int{3: {401, 401, 401}}
 	_, err := Run(context.Background(), c, in, Options{IdempotencyKey: "idem-1"})
 
-	t.Run("fails with unauthorized after 2 renewals", func(t *testing.T) {
-		if !api.IsCode(err, api.CodeUnauthorized) {
+	t.Run("fails with upload_token_refused after 2 renewals, not unauthorized", func(t *testing.T) {
+		if !api.IsCode(err, api.CodeUploadTokenRefused) {
 			t.Fatalf("got %v", err)
+		}
+
+		if api.IsCode(err, api.CodeUnauthorized) {
+			t.Fatalf("got %v", err)
+		}
+
+		var apiErr *api.Error
+		if !errors.As(err, &apiErr) {
+			t.Fatalf("got %#v", err)
+		}
+
+		if apiErr.Status != 401 {
+			t.Fatalf("got %#v", err)
+		}
+
+		if apiErr.Message == "" {
+			t.Fatalf("got %#v", err)
 		}
 
 		if n := countPrefix(srv.Log(), "POST /v1/transcriptions"); n != 3 {

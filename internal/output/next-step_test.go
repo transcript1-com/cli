@@ -16,12 +16,20 @@ var allCodes = []string{
 	api.CodeInternalError, api.CodeServiceUnavailable,
 	api.CodeMediaUnavailable, api.CodeMediaPrivate, api.CodeAgeRestricted, api.CodeLiveStream,
 	api.CodeNoCaptions, api.CodeMediaTooLong, api.CodeNoSpeech, api.CodeFetchFailed,
-	api.CodeTranscriptionFailed, "http_502",
+	api.CodeTranscriptionFailed, api.CodeUploadTokenRefused, "http_502",
 }
 
 var mcpOnly = []string{
 	"create_upload", "get_transcription", "list_transcriptions", "get_upload_status", "complete_upload",
 	"request_id", "Reconnect",
+}
+
+func isNamedFallback(code, step string) bool {
+	if step != fallbackStep {
+		return false
+	}
+
+	return !strings.HasPrefix(code, "http_")
 }
 
 func TestEveryCodeHasANextStep(t *testing.T) {
@@ -30,6 +38,10 @@ func TestEveryCodeHasANextStep(t *testing.T) {
 			step := NextStep(&api.Error{Code: code})
 			if step == "" {
 				t.Fatal("next step is empty")
+			}
+
+			if isNamedFallback(code, step) {
+				t.Fatal("named code falls back to the generic step")
 			}
 
 			for _, word := range mcpOnly {
@@ -54,6 +66,7 @@ func TestNextStepWording(t *testing.T) {
 		api.CodeInvalidState:        "Run the command again",
 		api.CodeIdempotencyConflict: "Run the command again",
 		api.CodeTooManyActiveJobs:   "Wait for a running transcription to finish, or lower --jobs",
+		api.CodeUploadTokenRefused:  "Run the command again; the upload starts over",
 	}
 	for code, want := range cases {
 		t.Run(code+" says what to do", func(t *testing.T) {

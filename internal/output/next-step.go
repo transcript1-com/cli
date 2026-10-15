@@ -43,6 +43,7 @@ var steps = map[string]func(e *api.Error) string{
 	api.CodeUploadIncomplete:    func(*api.Error) string { return runAgainStep },
 	api.CodeInvalidState:        func(*api.Error) string { return runAgainStep },
 	api.CodeIdempotencyConflict: func(*api.Error) string { return runAgainStep },
+	api.CodeUploadTokenRefused:  func(*api.Error) string { return runAgainStep + "; the upload starts over" },
 	api.CodeMediaTooLarge:       mediaTooLarge,
 	api.CodeRateLimited:         rateLimited,
 	api.CodeTooManyActiveJobs: func(*api.Error) string {
