@@ -13,7 +13,9 @@ import (
 
 const errManifestTemplate = "latest.json: %w"
 
-var errBadSignature = errors.New("latest.json signature does not verify")
+var errBadSignature = errors.New(
+	"latest.json signature does not verify (a release may be in progress; try again in a few minutes)",
+)
 
 func isSignatureValid(pub ed25519.PublicKey, data, encoded []byte) bool {
 	sig, err := base64.StdEncoding.DecodeString(strings.TrimSpace(string(encoded)))

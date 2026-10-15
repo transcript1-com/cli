@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -40,8 +41,14 @@ func TestFetchVerifies(t *testing.T) {
 		d := newDownloads(t)
 		_, other := newKey(t)
 		d.publish(t, other, "1.2.0", []byte("archive"))
-		if _, err := Fetch(context.Background(), http.DefaultClient, d.URL, pub); err == nil {
-			t.Fatal("no error")
+		_, err := Fetch(context.Background(), http.DefaultClient, d.URL, pub)
+		hint := "(a release may be in progress; try again in a few minutes)"
+		if err == nil {
+			t.Fatalf("err %v", err)
+		}
+
+		if !strings.Contains(err.Error(), hint) {
+			t.Fatalf("err %v", err)
 		}
 	})
 
