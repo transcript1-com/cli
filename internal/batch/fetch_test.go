@@ -70,6 +70,34 @@ func TestFetch(t *testing.T) {
 		}
 	})
 
+	t.Run("keeps a server file name with folders inside the output folder", func(t *testing.T) {
+		in := buildFileInput(t, "talk.mp3")
+		in.Name = "../../x.mp3"
+		started := run(t, c, in, Options{NoWait: true})
+		dir := filepath.Join(t.TempDir(), "a", "b")
+		res := Fetch(context.Background(), c, started.T.ID, Options{Dir: dir}, nil)
+		want := filepath.Join(dir, "x.txt")
+		_, err := os.Stat(want)
+		if res.Status != Done {
+			t.Fatalf("result %+v err %v", res, err)
+		}
+
+		if res.File != want {
+			t.Fatalf("result %+v err %v", res, err)
+		}
+
+		if err != nil {
+			t.Fatalf("result %+v err %v", res, err)
+		}
+	})
+
+	t.Run("names a file called .. untitled", func(t *testing.T) {
+		got := buildInput(&api.Transcription{Source: api.Source{Filename: "..", Size: 20}})
+		if got.Name != "untitled" {
+			t.Fatalf("input %+v", got)
+		}
+	})
+
 	t.Run("fails with the API error for an unknown id", func(t *testing.T) {
 		res := Fetch(context.Background(), c, "tr_404", Options{}, nil)
 		if res.Status != Failed {

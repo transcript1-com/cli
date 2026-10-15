@@ -6,6 +6,14 @@ import (
 	"unicode/utf8"
 )
 
+func TestSanitizeDotNames(t *testing.T) {
+	for _, name := range []string{"", ".", "..", " .. "} {
+		if got := Sanitize(name); got != "untitled" {
+			t.Fatalf("Sanitize(%q) = %q", name, got)
+		}
+	}
+}
+
 func TestSanitize(t *testing.T) {
 	cases := []struct {
 		name string

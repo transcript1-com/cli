@@ -2,8 +2,11 @@ package batch
 
 import (
 	"context"
+	"path/filepath"
+	"strings"
 
 	"github.com/transcript1/cli/internal/api"
+	"github.com/transcript1/cli/internal/files"
 	"github.com/transcript1/cli/internal/inputs"
 )
 
@@ -61,9 +64,21 @@ func buildInput(t *api.Transcription) inputs.Input {
 	in := inputs.Input{
 		Raw:  t.Source.Filename,
 		Kind: inputs.File,
-		Name: t.Source.Filename,
+		Name: buildServerName(t.Source.Filename),
 		Size: t.Source.Size,
 	}
 
 	return in
+}
+
+// the server echoes the name, it must not escape the folder
+func buildServerName(filename string) string {
+	base := filepath.Base(filename)
+	ext := filepath.Ext(base)
+	stem := files.Sanitize(strings.TrimSuffix(base, ext))
+	if ext != "."+files.Sanitize(strings.TrimPrefix(ext, ".")) {
+		ext = ""
+	}
+
+	return stem + ext
 }

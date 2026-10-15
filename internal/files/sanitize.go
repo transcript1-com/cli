@@ -1,6 +1,7 @@
 package files
 
 import (
+	"slices"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -14,7 +15,7 @@ const (
 
 func Sanitize(s string) string {
 	s = strings.TrimSpace(cut(clean(s), MaxTitleBytes))
-	if s == "" {
+	if slices.Contains([]string{"", ".", ".."}, s) {
 		return untitled
 	}
 
