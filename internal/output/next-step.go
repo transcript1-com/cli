@@ -13,7 +13,7 @@ const (
 	appURL       = "https://transcript1.com"
 	billingURL   = appURL + "/dashboard/billing"
 	tokensURL    = appURL + "/dashboard/account/tokens"
-	supportEmail = "support@one1.dev"
+	supportEmail = "support@transcript1.com"
 
 	signInStep   = "Run transcript1 login or set TRANSCRIPT1_API_KEY. Keys: " + tokensURL
 	runAgainStep = "Run the command again"

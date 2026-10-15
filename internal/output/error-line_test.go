@@ -72,7 +72,7 @@ func TestErrorLineShapes(t *testing.T) {
 		}
 		got := ErrorLine("a.mp3", err)
 		want := "transcript1: a.mp3: http_502: the server answered HTTP 502. " +
-			"Retry later; if it keeps failing, contact support@one1.dev"
+			"Retry later; if it keeps failing, contact support@transcript1.com"
 		if got != want {
 			t.Fatalf("ErrorLine = %q, want %q", got, want)
 		}
