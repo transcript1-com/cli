@@ -32,6 +32,7 @@ type harness struct {
 	stdin  string
 	secret func() (string, error)
 	stdout io.Writer
+	tty    bool
 }
 
 type failingWriter struct{}
@@ -69,6 +70,7 @@ func (h *harness) runWith(ctx context.Context, args ...string) outcome {
 		Stderr:     &stderr,
 		Getenv:     func(name string) string { return h.env[name] },
 		StdinTTY:   h.secret != nil,
+		StderrTTY:  h.tty,
 		ReadSecret: h.secret,
 	}
 

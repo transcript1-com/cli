@@ -11,13 +11,14 @@ import (
 const msgStillRunning = "still running: %s (%s), fetch with transcript1 get %s\n"
 
 type session struct {
-	env Env
-	s   *settings
-	rep *output.Reporter
-	out *printer
+	env    Env
+	s      *settings
+	rep    *output.Reporter
+	out    *printer
+	notice *notice
 }
 
-func newSession(env Env, s *settings, total int) *session {
+func newSession(ctx context.Context, env Env, s *settings, total int) *session {
 	return &session{
 		env: env,
 		s:   s,
@@ -27,6 +28,7 @@ func newSession(env Env, s *settings, total int) *session {
 			errw: env.Stderr,
 			json: s.json,
 		},
+		notice: startNotice(ctx, env, s),
 	}
 }
 
@@ -59,6 +61,7 @@ func (ss *session) finish(ctx context.Context, results []batch.Result, authErr e
 	}
 
 	ss.printSignInHint(results, authErr)
+	ss.notice.print(ctx, ss.env)
 
 	code := getExitCode(ctx, results, authErr)
 	if code != exitOK {

@@ -45,7 +45,7 @@ func transcribe(ctx context.Context, args []string, env Env) int {
 		return env.failUsage(err)
 	}
 
-	ss := newSession(env, s, len(ins))
+	ss := newSession(ctx, env, s, len(ins))
 	results, authErr := batch.Run(ctx, c, ins, opt, ss.emit)
 
 	return ss.finish(ctx, results, authErr, true)

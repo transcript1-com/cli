@@ -34,7 +34,7 @@ func get(ctx context.Context, args []string, env Env) int {
 		return env.failUsage(err)
 	}
 
-	ss := newSession(env, s, 1)
+	ss := newSession(ctx, env, s, 1)
 	res := batch.Fetch(ctx, c, raws[0], opt, ss.emit)
 
 	return ss.finish(ctx, []batch.Result{res}, findAuthError(res), false)

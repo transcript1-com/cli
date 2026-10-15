@@ -1,9 +1,12 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
+	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/transcript1/cli/internal/version"
 )
@@ -218,4 +221,109 @@ func TestHelpAndVersion(t *testing.T) {
 			t.Fatalf("code %d stdout %q", got.code, got.stdout)
 		}
 	})
+}
+
+func TestUpdateNotConfigured(t *testing.T) {
+	h := newHarness(t)
+	got := h.run("update")
+	if got.code != 1 {
+		t.Fatalf("code %d stdout %q stderr %q", got.code, got.stdout, got.stderr)
+	}
+
+	if got.stdout != "" {
+		t.Fatalf("code %d stdout %q stderr %q", got.code, got.stdout, got.stderr)
+	}
+
+	expectContains(t, got.stderr, "updates are not configured in this build")
+}
+
+const noticeLine = "transcript1 1.2.0 is available. Run transcript1 update."
+
+func fakeNotice(t *testing.T, release string) *int {
+	t.Helper()
+	calls := 0
+	savedCheck := checkUpdate
+	savedVersion := version.Version
+	checkUpdate = func(_ context.Context, _ *http.Client, base, current, cacheDir string, _ time.Time) string {
+		calls++
+		if base != "https://downloads.transcript1.com" {
+			t.Errorf("check %q %q %q", base, current, cacheDir)
+		}
+
+		if current != release {
+			t.Errorf("check %q %q %q", base, current, cacheDir)
+		}
+
+		if cacheDir == "" {
+			t.Errorf("check %q %q %q", base, current, cacheDir)
+		}
+
+		return noticeLine
+	}
+
+	version.Version = release
+	t.Cleanup(func() {
+		checkUpdate = savedCheck
+		version.Version = savedVersion
+	})
+
+	return &calls
+}
+
+func TestNoticeSuppressed(t *testing.T) {
+	t.Run("prints the notice after the run on a terminal", func(t *testing.T) {
+		h := newHarness(t)
+		calls := fakeNotice(t, "1.0.0")
+		h.tty = true
+		got := h.run(rickLink)
+		if got.code != 0 {
+			t.Fatalf("code %d calls %d stdout %q", got.code, *calls, got.stdout)
+		}
+
+		if got.stdout != transcriptText {
+			t.Fatalf("code %d calls %d stdout %q", got.code, *calls, got.stdout)
+		}
+
+		if *calls != 1 {
+			t.Fatalf("code %d calls %d stdout %q", got.code, *calls, got.stdout)
+		}
+
+		if !strings.HasSuffix(got.stderr, "1 minute used\n"+noticeLine+"\n") {
+			t.Fatalf("stderr %q", got.stderr)
+		}
+	})
+
+	cases := []struct {
+		name, release string
+		args          []string
+		tty           bool
+		env           string
+	}{
+		{name: "with --json", release: "1.0.0", args: []string{"--json", rickLink}, tty: true},
+		{name: "with -q", release: "1.0.0", args: []string{"-q", rickLink}, tty: true},
+		{name: "when stderr is not a terminal", release: "1.0.0", args: []string{rickLink}},
+		{name: "with TRANSCRIPT1_NO_UPDATE_CHECK=1", release: "1.0.0", args: []string{rickLink}, tty: true, env: "1"},
+		{name: "in a dev build", release: "dev", args: []string{rickLink}, tty: true},
+	}
+
+	for _, c := range cases {
+		t.Run("stays silent "+c.name, func(t *testing.T) {
+			h := newHarness(t)
+			calls := fakeNotice(t, c.release)
+			h.tty = c.tty
+			h.env["TRANSCRIPT1_NO_UPDATE_CHECK"] = c.env
+			got := h.run(c.args...)
+			if got.code != 0 {
+				t.Fatalf("code %d calls %d stderr %q", got.code, *calls, got.stderr)
+			}
+
+			if *calls != 0 {
+				t.Fatalf("code %d calls %d stderr %q", got.code, *calls, got.stderr)
+			}
+
+			if strings.Contains(got.stderr+got.stdout, noticeLine) {
+				t.Fatalf("code %d calls %d stderr %q", got.code, *calls, got.stderr)
+			}
+		})
+	}
 }

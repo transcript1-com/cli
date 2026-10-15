@@ -7,10 +7,15 @@ import (
 	"syscall"
 
 	"github.com/transcript1/cli/internal/cli"
+	"github.com/transcript1/cli/internal/update"
 	"golang.org/x/term"
 )
 
 func main() {
+	if exe, err := os.Executable(); err == nil {
+		update.CleanupOld(exe)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	restore := buildTerminalRestore()
