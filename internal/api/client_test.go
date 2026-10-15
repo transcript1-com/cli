@@ -264,6 +264,45 @@ func TestRetryAfterHonored(t *testing.T) {
 	}
 }
 
+func TestRetryAfterCapped(t *testing.T) {
+	var calls atomic.Int32
+	c, s := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
+		if calls.Add(1) == 1 {
+			w.Header().Set("Retry-After", "3600")
+			writeJSON(w, 503, `{"error":{"code":"service_unavailable","message":"Down","retryable":true}}`)
+
+			return
+		}
+
+		writeJSON(w, 200, `{"id":"tr_1","status":"processing"}`)
+	})
+
+	if _, err := c.Get(context.Background(), "tr_1", 0); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("sleeps at most 60 seconds between attempts", func(t *testing.T) {
+		if len(s.slept) != 1 {
+			t.Fatalf("sleeps %v", s.slept)
+		}
+
+		if s.slept[0] != 60*time.Second {
+			t.Fatalf("sleeps %v", s.slept)
+		}
+	})
+
+	t.Run("keeps the full value on the error for job-slot waits", func(t *testing.T) {
+		res := &response{
+			Status: 429,
+			Header: http.Header{"Retry-After": {"3600"}},
+			Body:   []byte(`{}`),
+		}
+		if got := buildResponseError(res).RetryAfter; got != time.Hour {
+			t.Fatalf("retry after %v", got)
+		}
+	})
+}
+
 func TestNetworkErrorRetried(t *testing.T) {
 	var calls atomic.Int32
 	c, s := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {

@@ -23,6 +23,8 @@ const (
 	waitTimeout    = 90 * time.Second
 	chunkTimeout   = 5 * time.Minute
 	defaultTimeout = 60 * time.Second
+	// slot waits use the full retry-after, plain retries cap here
+	maxRetryAfter = 60 * time.Second
 )
 
 type Client struct {
@@ -137,7 +139,7 @@ func buildAttemptError(res *response, err error) error {
 func getRetryDelay(attempt int, res *response) time.Duration {
 	if res != nil {
 		if wait := parseRetryAfter(res.Header); wait > 0 {
-			return wait
+			return min(wait, maxRetryAfter)
 		}
 	}
 
