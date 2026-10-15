@@ -1,0 +1,251 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+VERSION="${1:?usage: scripts/release.sh <version>}"
+DIST_DIR="${R2_RELEASE_DIST_DIR:-$ROOT/dist}"
+OUT="$DIST_DIR/$VERSION"
+BUCKET="${R2_RELEASE_BUCKET:-transcript1-downloads}"
+BASE_URL="${R2_RELEASE_BASE_URL:-https://downloads.transcript1.com}"
+ENDPOINT="${R2_RELEASE_ENDPOINT:-}"
+DRY_RUN="${R2_RELEASE_DRY_RUN:-0}"
+UPLOADER="${R2_RELEASE_UPLOADER:-aws}"
+CURL_RESOLVE="${R2_RELEASE_CURL_RESOLVE:-}"
+MIRROR_REPO="${GITHUB_MIRROR_REPO:-transcript1/cli}"
+SKIP_GIT_CHECKS="${RELEASE_SKIP_GIT_CHECKS:-0}"
+KEY_FILE="${TRANSCRIPT1_RELEASE_KEY_FILE:-}"
+PUB_FILE="${TRANSCRIPT1_RELEASE_PUB_FILE:-}"
+IMMUTABLE_CACHE='public, max-age=31536000, immutable'
+CURRENT_CACHE='public, max-age=300'
+RELEASE_PREFIX="cli/releases/$VERSION"
+TARGETS='darwin/arm64 darwin/amd64 linux/amd64 linux/arm64 windows/amd64'
+LDFLAGS="-s -w -X github.com/transcript1/cli/internal/version.Version=$VERSION"
+CHECK_DIR=''
+
+die() {
+  echo "$1" >&2
+  exit 1
+}
+
+cleanup() {
+  [[ -z "$CHECK_DIR" ]] || rm -rf "$CHECK_DIR"
+}
+trap cleanup EXIT
+
+check_settings() {
+  [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || die "invalid version: $VERSION"
+  [[ -n "$KEY_FILE" ]] || die 'TRANSCRIPT1_RELEASE_KEY_FILE is required (path of the private release key)'
+  [[ -f "$KEY_FILE" ]] || die "release key not found: $KEY_FILE"
+  command -v go >/dev/null || die 'go is required'
+  case "$UPLOADER" in
+    aws | wrangler) ;;
+    *) die "unsupported R2_RELEASE_UPLOADER: $UPLOADER" ;;
+  esac
+
+  [[ "$DRY_RUN" == 1 ]] && return 0
+  command -v curl >/dev/null || die 'curl is required'
+  if [[ "$UPLOADER" == wrangler ]]; then
+    command -v npx >/dev/null || die 'npx is required for Wrangler uploads'
+    return 0
+  fi
+
+  : "${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID is required}"
+  : "${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY is required}"
+  : "${ENDPOINT:?R2_RELEASE_ENDPOINT is required}"
+  command -v aws >/dev/null || die 'aws CLI is required'
+}
+
+check_repo() {
+  [[ "$SKIP_GIT_CHECKS" == 1 ]] && return 0
+  [[ -z "$(git -C "$ROOT" status --porcelain)" ]] || die 'working tree is not clean'
+  git -C "$ROOT" rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null && die "tag v$VERSION already exists"
+  (cd "$ROOT" && go vet ./... && go test ./...)
+}
+
+build_binaries() {
+  local target os arch binary
+  rm -rf "$OUT"
+  for target in $TARGETS; do
+    os="${target%/*}"
+    arch="${target#*/}"
+    binary=transcript1
+    [[ "$os" == windows ]] && binary=transcript1.exe
+    echo "building $os/$arch"
+    (cd "$ROOT" && GOOS="$os" GOARCH="$arch" CGO_ENABLED=0 go build -trimpath -ldflags "$LDFLAGS" \
+      -o "$OUT/bin/${os}_${arch}/$binary" ./cmd/transcript1)
+  done
+}
+
+run_release_tool() {
+  (cd "$ROOT" && go run ./cmd/release-tool "$@")
+}
+
+package_release() {
+  run_release_tool package --version "$VERSION" --dist "$OUT" --root "$ROOT"
+}
+
+write_manifest() {
+  local args=(--version "$VERSION" --dist "$OUT" --base-url "$BASE_URL" --key "$KEY_FILE")
+  [[ -z "$PUB_FILE" ]] || args+=(--pub "$PUB_FILE")
+  run_release_tool manifest "${args[@]}"
+}
+
+run_curl() {
+  if [[ -n "$CURL_RESOLVE" ]]; then
+    curl --resolve "$CURL_RESOLVE" "$@"
+    return
+  fi
+
+  curl "$@"
+}
+
+get_content_type() {
+  case "$1" in
+    *.tar.gz) echo application/gzip ;;
+    *.zip) echo application/zip ;;
+    *.json) echo application/json ;;
+    *) echo 'text/plain; charset=utf-8' ;;
+  esac
+}
+
+ensure_absent() {
+  local key="$1"
+  local result
+  local code
+  if [[ "$DRY_RUN" == 1 ]]; then
+    echo "VERIFY ABSENT s3://$BUCKET/$key"
+    return
+  fi
+
+  set +e
+  if [[ "$UPLOADER" == wrangler ]]; then
+    result=$(npx --yes wrangler r2 object get "$BUCKET/$key" --remote --pipe 2>&1 >/dev/null)
+  else
+    result=$(AWS_DEFAULT_REGION=auto aws --endpoint-url "$ENDPOINT" s3api head-object \
+      --bucket "$BUCKET" --key "$key" 2>&1)
+  fi
+  code=$?
+  set -e
+  [[ "$code" -ne 0 ]] || die "refusing to overwrite immutable release object: s3://$BUCKET/$key"
+
+  case "$result" in
+    *'(404)'* | *'Not Found'* | *'not found'* | *NoSuchKey* | *'specified key does not exist'*) ;;
+    *) die "could not verify immutable release key: $result" ;;
+  esac
+}
+
+upload() {
+  local file="$1"
+  local key="$2"
+  local type="$3"
+  local cache="$4"
+  if [[ "$DRY_RUN" == 1 ]]; then
+    echo "UPLOAD $key $type $cache"
+    return
+  fi
+
+  echo "uploading $key"
+  if [[ "$UPLOADER" == wrangler ]]; then
+    npx --yes wrangler r2 object put "$BUCKET/$key" --remote --file "$file" \
+      --content-type "$type" --cache-control "$cache" --force
+    return
+  fi
+
+  AWS_DEFAULT_REGION=auto aws --endpoint-url "$ENDPOINT" s3 cp "$file" "s3://$BUCKET/$key" \
+    --content-type "$type" --cache-control "$cache" --no-progress
+}
+
+verify_length() {
+  local file="$1"
+  local url="$2"
+  local expected
+  local headers
+  local actual
+  expected=$(wc -c < "$file" | tr -d ' ')
+  headers=$(run_curl --fail --silent --show-error --location --head "$url")
+  actual=$(echo "$headers" | tr -d '\r' | awk 'tolower($1) == "content-length:" { value = $2 } END { print value }')
+  [[ "$actual" == "$expected" ]] || die "content length mismatch for $url: expected $expected, got ${actual:-missing}"
+}
+
+publish_versioned() {
+  local file
+  local key
+  local files=("$OUT"/transcript1_"$VERSION"_*.tar.gz "$OUT"/transcript1_"$VERSION"_*.zip "$OUT/checksums.txt")
+  for file in "${files[@]}"; do
+    key="$RELEASE_PREFIX/$(basename "$file")"
+    ensure_absent "$key"
+    upload "$file" "$key" "$(get_content_type "$file")" "$IMMUTABLE_CACHE"
+  done
+
+  [[ "$DRY_RUN" == 1 ]] && return 0
+  for file in "${files[@]}"; do
+    verify_length "$file" "$BASE_URL/$RELEASE_PREFIX/$(basename "$file")"
+  done
+}
+
+# latest.json is the commit point, so it goes up last
+publish_current() {
+  upload "$OUT/latest.json.sig" cli/latest.json.sig 'text/plain; charset=utf-8' "$CURRENT_CACHE"
+  upload "$OUT/latest.json" cli/latest.json application/json "$CURRENT_CACHE"
+}
+
+verify_public() {
+  local url
+  local urls
+  [[ "$DRY_RUN" == 1 ]] && return 0
+  CHECK_DIR=$(mktemp -d)
+  run_curl --fail --silent --show-error --location -o "$CHECK_DIR/latest.json" "$BASE_URL/cli/latest.json?v=$VERSION"
+  run_curl --fail --silent --show-error --location -o "$CHECK_DIR/latest.json.sig" "$BASE_URL/cli/latest.json.sig?v=$VERSION"
+  cmp -s "$CHECK_DIR/latest.json" "$OUT/latest.json" || die 'public latest.json differs from the local file'
+  cmp -s "$CHECK_DIR/latest.json.sig" "$OUT/latest.json.sig" || die 'public latest.json.sig differs from the local file'
+  grep -q "\"version\": \"$VERSION\"" "$CHECK_DIR/latest.json" || die "public latest.json is not version $VERSION"
+  urls=$(sed -n 's/.*"url": *"\([^"]*\)".*/\1/p' "$OUT/latest.json")
+  [[ -n "$urls" ]] || die 'latest.json has no asset URLs'
+  for url in $urls; do
+    run_curl --fail --silent --show-error --location --head "$url" >/dev/null
+  done
+}
+
+tag_release() {
+  [[ "$DRY_RUN" == 1 ]] && return 0
+  git -C "$ROOT" tag "v$VERSION"
+}
+
+create_mirror_release() {
+  local notes="Mirror of the transcript1 $VERSION release hosted at downloads.transcript1.com."
+  gh auth status >/dev/null 2>&1 || return 1
+  gh release create "v$VERSION" --repo "$MIRROR_REPO" --title "transcript1 $VERSION" --notes "$notes" "$@"
+}
+
+mirror_github() {
+  local assets=("$OUT"/transcript1_"$VERSION"_*.tar.gz "$OUT"/transcript1_"$VERSION"_*.zip "$OUT/checksums.txt")
+  if ! command -v gh >/dev/null; then
+    echo 'gh not found; skipping the GitHub mirror'
+    return 0
+  fi
+
+  if create_mirror_release "${assets[@]}"; then
+    echo "Mirrored transcript1 $VERSION to GitHub"
+    return 0
+  fi
+
+  echo 'warning: GitHub mirror failed; R2 is published. Retry with:' >&2
+  echo "  gh release create v$VERSION --repo $MIRROR_REPO --title 'transcript1 $VERSION' ${assets[*]}" >&2
+}
+
+check_settings
+check_repo
+build_binaries
+package_release
+write_manifest
+publish_versioned
+publish_current
+verify_public
+tag_release
+mirror_github
+if [[ "$DRY_RUN" == 1 ]]; then
+  echo "Dry run: built and signed transcript1 $VERSION, uploaded nothing"
+  exit 0
+fi
+
+echo "Published transcript1 $VERSION to $BASE_URL/cli/"
