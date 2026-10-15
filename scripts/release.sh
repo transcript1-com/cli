@@ -32,8 +32,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
+check_pub_file() {
+  [[ -z "$PUB_FILE" ]] && return 0
+  [[ "$DRY_RUN" == 1 ]] && return 0
+  die 'TRANSCRIPT1_RELEASE_PUB_FILE is only for dry runs;' \
+    'a real release checks the key against internal/update/release-key.pub'
+}
+
 check_settings() {
-  [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || die "invalid version: $VERSION"
+  [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "invalid version: $VERSION (expected x.y.z)"
+  check_pub_file
   [[ -n "$KEY_FILE" ]] || die 'TRANSCRIPT1_RELEASE_KEY_FILE is required (path of the private release key)'
   [[ -f "$KEY_FILE" ]] || die "release key not found: $KEY_FILE"
   command -v go >/dev/null || die 'go is required'

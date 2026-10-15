@@ -8,7 +8,7 @@ REPO="${GITHUB_MIRROR_REPO:-transcript1/cli}"
 
 create_release() {
   gh auth status >/dev/null 2>&1 || return 1
-  gh release create "v$VERSION" --repo "$REPO" --notes "transcript1 $VERSION" "$@"
+  gh release create "v$VERSION" --verify-tag --repo "$REPO" --notes "transcript1 $VERSION" "$@"
 }
 
 if ! command -v gh >/dev/null; then

@@ -84,12 +84,12 @@ Set up releases once:
 3. Optional: create the GitHub repo `transcript1/cli` and run `gh auth login` for the mirror.
 4. Run `scripts/release.sh 1.0.0`, then deploy the site.
 
-`scripts/release.sh <version>` checks the working tree, runs vet and tests, builds the five targets, packages them, signs
-`latest.json`, uploads to R2, verifies the public URLs, tags `v<version>`, and then runs
-`scripts/mirror-release-github.sh <version>`, which creates the GitHub release when `gh` is installed. Push the tag
-(`git push origin v<version>`) before the mirror so the GitHub tag points at the release commit. If the mirror runs
-earlier or fails, it prints a warning and a retry command (`scripts/mirror-release-github.sh <version>`).
-The R2 release stays published. A dry run never calls `gh`.
+`scripts/release.sh <version>` (strictly `x.y.z`) checks the working tree, runs vet and tests, builds the five targets,
+packages them, signs `latest.json`, uploads to R2 and verifies the public URLs. release.sh tags locally; push master and
+`v<version>` (`git push origin master v<version>`), then run `scripts/mirror-release-github.sh <version>`, which creates
+the GitHub release from the pushed tag when `gh` is installed. release.sh also tries the mirror at the end; until the
+tag is pushed, that attempt fails with a warning and the same retry command. The R2 release stays published. A dry run
+never calls `gh`.
 
 If a release stops after uploading the archives but before uploading `latest.json`, a re-run refuses to overwrite the
 archives. Run
@@ -99,6 +99,7 @@ archives. Run
 | Variable | Meaning |
 |---|---|
 | `TRANSCRIPT1_RELEASE_KEY_FILE` | path of the private release key (required) |
+| `TRANSCRIPT1_RELEASE_PUB_FILE` | dry runs only: public key to check against instead of `internal/update/release-key.pub` |
 | `R2_RELEASE_UPLOADER` | `aws` (default) or `wrangler` |
 | `R2_RELEASE_BUCKET` | default `transcript1-downloads` |
 | `R2_RELEASE_BASE_URL` | default `https://downloads.transcript1.com` |

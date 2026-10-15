@@ -94,6 +94,37 @@ if grep -q -E '^(UPLOAD|VERIFY ABSENT) ' "$TMP/mismatch.txt"; then
   fail 'a mismatched key must fail before any upload line' "$TMP/mismatch.txt"
 fi
 
+# a bogus uploader so a missed check never reaches r2
+run_real_with_pub() {
+  (
+    cd "$ROOT"
+    PATH="$TMP/bin:$PATH" \
+    R2_RELEASE_DRY_RUN=0 \
+    R2_RELEASE_UPLOADER=none \
+    RELEASE_SKIP_GIT_CHECKS=1 \
+    R2_RELEASE_DIST_DIR="$TMP/real-dist" \
+    TRANSCRIPT1_RELEASE_KEY_FILE="$TMP/a.key" \
+    TRANSCRIPT1_RELEASE_PUB_FILE="$TMP/a.pub" \
+    bash scripts/release.sh "$VERSION"
+  )
+}
+
+if run_real_with_pub > "$TMP/pub-real.txt" 2>&1; then
+  fail 'a real run must refuse TRANSCRIPT1_RELEASE_PUB_FILE' "$TMP/pub-real.txt"
+fi
+
+grep -F -q 'TRANSCRIPT1_RELEASE_PUB_FILE is only for dry runs' "$TMP/pub-real.txt" ||
+  fail 'missing the pub file error for a real run' "$TMP/pub-real.txt"
+
+if VERSION=1.0.0-rc.1 run_release "$TMP/a.key" > "$TMP/rc.txt" 2>&1; then
+  fail 'a pre-release version must be refused' "$TMP/rc.txt"
+fi
+
+grep -F -q 'invalid version: 1.0.0-rc.1' "$TMP/rc.txt" || fail 'missing the invalid version error' "$TMP/rc.txt"
+if grep -q -E '^building ' "$TMP/rc.txt"; then
+  fail 'an invalid version must fail before the build' "$TMP/rc.txt"
+fi
+
 R2_RELEASE_RESUME=1 run_release "$TMP/a.key" > "$TMP/resume.txt" 2>&1 || fail 'resume exited non-zero' "$TMP/resume.txt"
 if grep -q -E '^VERIFY ABSENT |^UPLOAD cli/releases/' "$TMP/resume.txt"; then
   fail 'resume must skip the absent checks and the versioned uploads' "$TMP/resume.txt"
@@ -116,7 +147,7 @@ grep -F -q "scripts/mirror-release-github.sh $VERSION" "$TMP/mirror-fail.txt" ||
 rm -f "$TMP/gh-mirror.log"
 run_mirror 0 > "$TMP/mirror-ok.txt" 2>&1 || fail 'mirror exited non-zero' "$TMP/mirror-ok.txt"
 create=$(grep -F 'release create' "$TMP/gh-mirror.log") || fail 'gh release create was not called' "$TMP/gh-mirror.log"
-for want in "v$VERSION" '--repo transcript1/cli' "--notes transcript1 $VERSION" checksums.txt $ARCHIVES; do
+for want in "v$VERSION" '--verify-tag' '--repo transcript1/cli' "--notes transcript1 $VERSION" checksums.txt $ARCHIVES; do
   [[ "$create" == *"$want"* ]] || fail "gh release create is missing: $want" "$TMP/gh-mirror.log"
 done
 
