@@ -1,6 +1,7 @@
 # transcript1
 
-transcript1 transcribes audio and video from files or YouTube links. Docs: https://transcript1.com/docs/cli
+transcript1 transcribes YouTube links and local audio or video files from your terminal.
+Read the [CLI docs](https://transcript1.com/docs/cli) for setup, batch inputs and output options.
 
 ## Install
 
@@ -16,8 +17,8 @@ Windows (PowerShell):
 irm https://transcript1.com/install.ps1 | iex
 ```
 
-If you download an archive in a browser on macOS, remove the quarantine flag before the first run (the binary is not
-notarized):
+On macOS, the binary is not notarized. If you download an archive in a browser, remove the quarantine flag before
+running it:
 
 ```sh
 xattr -d com.apple.quarantine transcript1
@@ -29,7 +30,7 @@ xattr -d com.apple.quarantine transcript1
 transcript1 login
 ```
 
-`login` checks the key and saves it. In scripts and agents, set `TRANSCRIPT1_API_KEY` instead; it takes priority over the
+`login` checks your API key before saving it. For scripts and agents, set `TRANSCRIPT1_API_KEY`; it takes priority over the
 saved key. `transcript1 logout` removes the saved key.
 
 ## Use
@@ -40,16 +41,16 @@ transcript1 -f srt -o interview.srt interview.mp3
 transcript1 -o transcripts/ ./recordings
 ```
 
-One input prints to stdout. Several inputs are written to `./transcripts`, one file each. `transcript1 --help` lists
-every flag.
+By default, one input prints to stdout. Several inputs save one file each in `./transcripts`. Run `transcript1 --help`
+for every flag.
 
-Pass `--json` for one JSON line per input on stdout, with no progress or summary:
+Use `--json` to print one JSON line per input to stdout, with no progress or summary:
 
 ```sh
 transcript1 --json https://youtu.be/dQw4w9WgXcQ
 ```
 
-Fetch an earlier transcription with `transcript1 get <id>`.
+Run `transcript1 get <id>` to fetch an earlier transcription.
 
 ## Update
 
@@ -74,7 +75,7 @@ go build ./cmd/transcript1
 
 ## Releasing
 
-One-time steps:
+Set up releases once:
 
 1. Cloudflare: create the R2 bucket `transcript1-downloads` with the custom domain `downloads.transcript1.com`. Have R2
    credentials, or `wrangler login`, in the shell that runs releases.
@@ -83,14 +84,15 @@ One-time steps:
 3. Optional: create the GitHub repo `transcript1/cli` and run `gh auth login` for the mirror.
 4. Run `scripts/release.sh 1.0.0`, then deploy the site.
 
-`scripts/release.sh <version>` checks the tree, vets and tests, builds the five targets, packages them, signs
+`scripts/release.sh <version>` checks the working tree, runs vet and tests, builds the five targets, packages them, signs
 `latest.json`, uploads to R2, verifies the public URLs, tags `v<version>`, and then runs
 `scripts/mirror-release-github.sh <version>`, which creates the GitHub release when `gh` is installed. Push the tag
-(`git push origin v<version>`) before the mirror, so the GitHub tag points at the release commit; a mirror that runs
-earlier or fails prints a warning and a retry command (`scripts/mirror-release-github.sh <version>`), and the R2 release
-stays published. A dry run never calls `gh`.
+(`git push origin v<version>`) before the mirror so the GitHub tag points at the release commit. If the mirror runs
+earlier or fails, it prints a warning and a retry command (`scripts/mirror-release-github.sh <version>`).
+The R2 release stays published. A dry run never calls `gh`.
 
-If a release stops after the archives are uploaded but before `latest.json` is, a re-run refuses to overwrite them. Run
+If a release stops after uploading the archives but before uploading `latest.json`, a re-run refuses to overwrite the
+archives. Run
 `R2_RELEASE_RESUME=1 scripts/release.sh <version>` to check the uploaded files against the local ones and publish
 `latest.json`. It reuses the archives in `dist/<version>` and does not rebuild.
 

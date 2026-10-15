@@ -1,26 +1,26 @@
 package cli
 
-const helpText = `transcript1 turns YouTube links, audio files and video files into transcripts.
+const helpText = `transcript1 transcribes YouTube links and local audio or video files.
 
 Usage:
   transcript1 [flags] <input>...   transcribe links, files or folders
-  transcript1 get [flags] <id>     fetch an earlier transcription, waiting while it runs
-  transcript1 login                save an API key
+  transcript1 get [flags] <id>     fetch an earlier transcription and wait if it is still running
+  transcript1 login                check and save an API key
   transcript1 logout               remove the saved key
   transcript1 update               install the latest release
   transcript1 --version | --help
 
-An input is a YouTube link, an audio or video file, a folder of them, or - to read
-one input per line from stdin. One input prints to stdout. Several inputs are
-written to ./transcripts, one file each.
+Pass a YouTube link, an audio or video file, or a folder of media files.
+Use - to read one input per line from stdin. By default, one input prints to
+stdout. Several inputs save one file each in ./transcripts.
 
 Flags:
   -f, --format text|srt|vtt|json   output format (default text)
   -o, --out <path>                 output file or folder
-      --speakers                   label who is speaking
+      --speakers                   add speaker labels
       --timestamps                 put [hh:mm:ss] before each line (text only)
       --language <code>            ISO 639-1 code or auto (default auto)
-      --source auto|captions|stt   where a YouTube transcript comes from (default auto)
+      --source auto|captions|stt   YouTube transcript source (default auto)
       --jobs <n>                   inputs running at once, 1-20 (default 2)
       --fresh                      do not reuse a YouTube transcription from the last 24 hours
       --overwrite                  redo inputs whose output file already exists
