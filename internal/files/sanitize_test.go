@@ -56,6 +56,29 @@ func TestSanitize(t *testing.T) {
 		}
 	})
 
+	misaligned := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"backs up from the middle of a 2-byte character", "a" + strings.Repeat("é", 150), "a" + strings.Repeat("é", 59)},
+		{"backs up 3 bytes into a 4-byte character", "a" + strings.Repeat("🎙", 100), "a" + strings.Repeat("🎙", 29)},
+		{"backs up 2 bytes into a 4-byte character", "ab" + strings.Repeat("🎙", 100), "ab" + strings.Repeat("🎙", 29)},
+		{"backs up 1 byte into a 4-byte character", "abc" + strings.Repeat("🎙", 100), "abc" + strings.Repeat("🎙", 29)},
+	}
+	for _, c := range misaligned {
+		t.Run(c.name, func(t *testing.T) {
+			got := Sanitize(c.in)
+			if !utf8.ValidString(got) {
+				t.Fatalf("got %d bytes %q, want %d bytes %q", len(got), got, len(c.want), c.want)
+			}
+
+			if got != c.want {
+				t.Fatalf("got %d bytes %q, want %d bytes %q", len(got), got, len(c.want), c.want)
+			}
+		})
+	}
+
 	t.Run("trims the space left at the cut", func(t *testing.T) {
 		got := Sanitize(strings.Repeat("a", 119) + " bbb")
 		if got != strings.Repeat("a", 119) {
