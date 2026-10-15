@@ -45,6 +45,7 @@ const (
 	Uploading
 	Queued
 	Transcribing
+	Reconnecting
 	Finished
 )
 

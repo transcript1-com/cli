@@ -28,6 +28,14 @@ func ErrorLine(input string, err error) string {
 	return prefix + apiErr.Code + ": " + detail + ". " + step
 }
 
+func addHint(line, hint string) string {
+	if hint == "" {
+		return line
+	}
+
+	return line + "; " + hint
+}
+
 func buildErrorDetail(e *api.Error) string {
 	if e.Code == api.CodeInsufficientMinutes {
 		if detail := buildMinutesDetail(e); detail != "" {

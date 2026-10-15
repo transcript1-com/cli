@@ -15,6 +15,10 @@ func (s *Server) get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if s.failPoll(w, j) {
+		return
+	}
+
 	s.poll(j)
 	query := r.URL.Query()
 	format := query.Get("format")

@@ -106,7 +106,7 @@ func (r *Reporter) handleFinished(e batch.Event) {
 
 func (r *Reporter) buildFinalLine(e batch.Event, res *batch.Result) string {
 	if res.Status == batch.Failed {
-		return r.paint(red, ErrorLine(Display(e.Input), res.Err))
+		return r.paint(red, addHint(ErrorLine(Display(e.Input), res.Err), res.GetHint()))
 	}
 
 	if r.mode == Quiet {

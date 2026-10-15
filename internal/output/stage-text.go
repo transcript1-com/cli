@@ -24,6 +24,8 @@ func buildStageText(e batch.Event, withPercent bool) string {
 		return "queued"
 	case batch.Transcribing:
 		return "transcribing"
+	case batch.Reconnecting:
+		return "reconnecting"
 	}
 
 	return ""

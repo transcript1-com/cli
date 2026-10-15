@@ -30,8 +30,12 @@ type Server struct {
 	FailCode        string
 	Titles          map[string]string
 	BlockChunks     chan struct{}
+	PollErrors      int
+	PollErrorStatus int
+	PollDrop        bool
 
 	mu         sync.Mutex
+	pollErrors int
 	srv        *httptest.Server
 	closing    chan struct{}
 	jobs       map[string]*job
