@@ -40,7 +40,7 @@ func runOne(
 	ctx context.Context, c *api.Client, idx int, in inputs.Input, opt Options, fullName bool, emit func(Event),
 ) Result {
 	r := newRunner(c, idx, in, opt, fullName, emit)
-	return r.emitFinished(r.run(ctx))
+	return r.emitFinished(r.cancelUpload(r.run(ctx)))
 }
 
 func (r *runner) run(ctx context.Context) Result {
