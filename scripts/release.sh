@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="${1:?usage: scripts/release.sh <version>}"
 DIST_DIR="${R2_RELEASE_DIST_DIR:-$ROOT/dist}"
 OUT="$DIST_DIR/$VERSION"
@@ -11,7 +11,7 @@ ENDPOINT="${R2_RELEASE_ENDPOINT:-}"
 DRY_RUN="${R2_RELEASE_DRY_RUN:-0}"
 UPLOADER="${R2_RELEASE_UPLOADER:-aws}"
 CURL_RESOLVE="${R2_RELEASE_CURL_RESOLVE:-}"
-MIRROR_REPO="${GITHUB_MIRROR_REPO:-transcript1/cli}"
+RESUME="${R2_RELEASE_RESUME:-0}"
 SKIP_GIT_CHECKS="${RELEASE_SKIP_GIT_CHECKS:-0}"
 KEY_FILE="${TRANSCRIPT1_RELEASE_KEY_FILE:-}"
 PUB_FILE="${TRANSCRIPT1_RELEASE_PUB_FILE:-}"
@@ -23,7 +23,7 @@ LDFLAGS="-s -w -X github.com/transcript1/cli/internal/version.Version=$VERSION"
 CHECK_DIR=''
 
 die() {
-  echo "$1" >&2
+  echo "$*" >&2
   exit 1
 }
 
@@ -126,12 +126,32 @@ ensure_absent() {
   fi
   code=$?
   set -e
-  [[ "$code" -ne 0 ]] || die "refusing to overwrite immutable release object: s3://$BUCKET/$key"
+  [[ "$code" -ne 0 ]] || die "refusing to overwrite immutable release object: s3://$BUCKET/$key;" \
+    "if this version's files are already uploaded, re-run with R2_RELEASE_RESUME=1 to publish latest.json"
+  is_absent "$UPLOADER" "$result" || die "could not verify immutable release key: $result"
+}
+
+is_absent() {
+  local uploader="$1"
+  local result="$2"
+  case "$result" in
+    *NoSuchKey*) return 0 ;;
+  esac
+
+  if [[ "$uploader" == wrangler ]]; then
+    case "$result" in
+      *'The specified key does not exist'*) return 0 ;;
+      *'(404)'*[Oo]bject* | *[Oo]bject*'(404)'*) return 0 ;;
+    esac
+
+    return 1
+  fi
 
   case "$result" in
-    *'(404)'* | *'Not Found'* | *'not found'* | *NoSuchKey* | *'specified key does not exist'*) ;;
-    *) die "could not verify immutable release key: $result" ;;
+    *'(404)'*HeadObject*) return 0 ;;
   esac
+
+  return 1
 }
 
 upload() {
@@ -162,21 +182,30 @@ verify_length() {
   local headers
   local actual
   expected=$(wc -c < "$file" | tr -d ' ')
-  headers=$(run_curl --fail --silent --show-error --location --head "$url")
+  headers=$(run_curl --fail --silent --show-error --location --head "$url") || die "could not read $url"
   actual=$(echo "$headers" | tr -d '\r' | awk 'tolower($1) == "content-length:" { value = $2 } END { print value }')
   [[ "$actual" == "$expected" ]] || die "content length mismatch for $url: expected $expected, got ${actual:-missing}"
 }
 
-publish_versioned() {
+upload_versioned() {
   local file
   local key
-  local files=("$OUT"/transcript1_"$VERSION"_*.tar.gz "$OUT"/transcript1_"$VERSION"_*.zip "$OUT/checksums.txt")
-  for file in "${files[@]}"; do
+  if [[ "$RESUME" == 1 ]]; then
+    echo 'RESUME skipping the versioned uploads'
+    return 0
+  fi
+
+  for file in "$@"; do
     key="$RELEASE_PREFIX/$(basename "$file")"
     ensure_absent "$key"
     upload "$file" "$key" "$(get_content_type "$file")" "$IMMUTABLE_CACHE"
   done
+}
 
+publish_versioned() {
+  local file
+  local files=("$OUT"/transcript1_"$VERSION"_*.tar.gz "$OUT"/transcript1_"$VERSION"_*.zip "$OUT/checksums.txt")
+  upload_versioned "${files[@]}"
   [[ "$DRY_RUN" == 1 ]] && return 0
   for file in "${files[@]}"; do
     verify_length "$file" "$BASE_URL/$RELEASE_PREFIX/$(basename "$file")"
@@ -211,41 +240,65 @@ tag_release() {
   git -C "$ROOT" tag "v$VERSION"
 }
 
-create_mirror_release() {
-  local notes="Mirror of the transcript1 $VERSION release hosted at downloads.transcript1.com."
-  gh auth status >/dev/null 2>&1 || return 1
-  gh release create "v$VERSION" --repo "$MIRROR_REPO" --title "transcript1 $VERSION" --notes "$notes" "$@"
-}
-
 mirror_github() {
-  local assets=("$OUT"/transcript1_"$VERSION"_*.tar.gz "$OUT"/transcript1_"$VERSION"_*.zip "$OUT/checksums.txt")
-  if ! command -v gh >/dev/null; then
-    echo 'gh not found; skipping the GitHub mirror'
+  if [[ "$DRY_RUN" == 1 ]]; then
+    echo "MIRROR (dry run) scripts/mirror-release-github.sh $VERSION"
     return 0
   fi
 
-  if create_mirror_release "${assets[@]}"; then
-    echo "Mirrored transcript1 $VERSION to GitHub"
-    return 0
-  fi
-
-  echo 'warning: GitHub mirror failed; R2 is published. Retry with:' >&2
-  echo "  gh release create v$VERSION --repo $MIRROR_REPO --title 'transcript1 $VERSION' ${assets[*]}" >&2
+  bash "$ROOT/scripts/mirror-release-github.sh" "$VERSION"
 }
 
-check_settings
-check_repo
-build_binaries
-package_release
-write_manifest
-publish_versioned
-publish_current
-verify_public
-tag_release
-mirror_github
-if [[ "$DRY_RUN" == 1 ]]; then
-  echo "Dry run: built and signed transcript1 $VERSION, uploaded nothing"
-  exit 0
-fi
+list_release_names() {
+  local target os arch ext
+  for target in $TARGETS; do
+    os="${target%/*}"
+    arch="${target#*/}"
+    ext=tar.gz
+    [[ "$os" == windows ]] && ext=zip
+    echo "transcript1_${VERSION}_${os}_${arch}.$ext"
+  done
 
-echo "Published transcript1 $VERSION to $BASE_URL/cli/"
+  echo checksums.txt
+}
+
+check_unpublished() {
+  local name
+  [[ "$DRY_RUN" == 1 ]] && return 0
+  for name in $(list_release_names); do
+    ensure_absent "$RELEASE_PREFIX/$name"
+  done
+}
+
+build_or_reuse() {
+  if [[ "$RESUME" != 1 ]]; then
+    check_unpublished
+    build_binaries
+    package_release
+    return 0
+  fi
+
+  [[ -f "$OUT/checksums.txt" ]] || die "nothing to resume: $OUT/checksums.txt is missing"
+}
+
+main() {
+  check_settings
+  check_repo
+  build_or_reuse
+  write_manifest
+  publish_versioned
+  publish_current
+  verify_public
+  tag_release
+  mirror_github
+  if [[ "$DRY_RUN" == 1 ]]; then
+    echo "Dry run: built and signed transcript1 $VERSION, uploaded nothing"
+    return 0
+  fi
+
+  echo "Published transcript1 $VERSION to $BASE_URL/cli/"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  main
+fi

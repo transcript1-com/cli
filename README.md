@@ -84,8 +84,15 @@ One-time steps:
 4. Run `scripts/release.sh 1.0.0`, then deploy the site.
 
 `scripts/release.sh <version>` checks the tree, vets and tests, builds the five targets, packages them, signs
-`latest.json`, uploads to R2, verifies the public URLs, tags `v<version>`, and mirrors to GitHub when `gh` is installed.
-A failed mirror prints a warning and a retry command; the release stays published.
+`latest.json`, uploads to R2, verifies the public URLs, tags `v<version>`, and then runs
+`scripts/mirror-release-github.sh <version>`, which creates the GitHub release when `gh` is installed. Push the tag
+(`git push origin v<version>`) before the mirror, so the GitHub tag points at the release commit; a mirror that runs
+earlier or fails prints a warning and a retry command (`scripts/mirror-release-github.sh <version>`), and the R2 release
+stays published. A dry run never calls `gh`.
+
+If a release stops after the archives are uploaded but before `latest.json` is, a re-run refuses to overwrite them. Run
+`R2_RELEASE_RESUME=1 scripts/release.sh <version>` to check the uploaded files against the local ones and publish
+`latest.json`. It reuses the archives in `dist/<version>` and does not rebuild.
 
 | Variable | Meaning |
 |---|---|
@@ -96,7 +103,8 @@ A failed mirror prints a warning and a retry command; the release stays publishe
 | `R2_RELEASE_ENDPOINT` | R2 S3 endpoint, required for `aws` |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | R2 credentials for `aws` |
 | `R2_RELEASE_DRY_RUN=1` | build, package and sign, print the uploads, skip R2 and the tag |
-| `GITHUB_MIRROR_REPO` | default `transcript1/cli` |
+| `R2_RELEASE_RESUME=1` | skip the versioned uploads, verify them, publish `latest.json` |
+| `GITHUB_MIRROR_REPO` | default `transcript1/cli`, used by the mirror script |
 
 ## License
 
