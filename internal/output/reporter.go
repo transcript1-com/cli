@@ -14,6 +14,7 @@ type Reporter struct {
 	mode  Mode
 	total int
 	color bool
+	width int
 	last  map[int]batch.Stage
 	live  []liveLine
 	drawn int
@@ -24,6 +25,7 @@ func NewReporter(w io.Writer, mode Mode, total int, color bool) *Reporter {
 		w:     w,
 		mode:  mode,
 		total: total,
+		width: getTerminalWidth(w),
 		last:  map[int]batch.Stage{},
 	}
 	if mode == TTY {
@@ -50,7 +52,7 @@ func (r *Reporter) Event(e batch.Event) {
 	}
 
 	if r.mode == TTY {
-		r.setLive(e.Index, r.buildLabel(e)+"  "+buildStageText(e, true))
+		r.setLive(e.Index, r.buildLiveText(e))
 		return
 	}
 
