@@ -45,6 +45,15 @@ func TestUsageErrors(t *testing.T) {
 			args: []string{"a/talk.mp3", "b/talk.mp3"},
 			want: "same file",
 		},
+		{
+			name: "two inputs whose outputs differ only by case",
+			setup: func(h *harness) {
+				h.writeMedia("Talk.mp3")
+				h.writeMedia("talk.wav")
+			},
+			args: []string{"Talk.mp3", "talk.wav"},
+			want: "Talk.mp3 and talk.wav would write the same file",
+		},
 		{name: "zero jobs", args: []string{"--jobs", "0", rickLink}, want: "--jobs"},
 		{name: "too many jobs", args: []string{"--jobs", "21", rickLink}, want: "--jobs"},
 		{name: "no inputs", args: nil, want: "no inputs: pass a YouTube link, a file or a folder"},

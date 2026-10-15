@@ -8,6 +8,8 @@ import (
 	"github.com/transcript1/cli/internal/inputs"
 )
 
+const errSameFileTemplate = "%s and %s would write the same file; run them separately"
+
 func FullNames(ins []inputs.Input) (map[int]bool, error) {
 	byStem := map[string][]int{}
 	byName := map[string]int{}
@@ -17,7 +19,7 @@ func FullNames(ins []inputs.Input) (map[int]bool, error) {
 		}
 
 		if j, ok := byName[in.Name]; ok {
-			return nil, fmt.Errorf("%s and %s would write the same file; run them separately", getLabel(ins[j]), getLabel(in))
+			return nil, fmt.Errorf(errSameFileTemplate, getLabel(ins[j]), getLabel(in))
 		}
 
 		byName[in.Name] = i
@@ -36,7 +38,26 @@ func FullNames(ins []inputs.Input) (map[int]bool, error) {
 		}
 	}
 
-	return full, nil
+	return full, checkSameOutput(ins, full)
+}
+
+// macos and windows file systems ignore case
+func checkSameOutput(ins []inputs.Input, full map[int]bool) error {
+	seen := map[string]int{}
+	for i, in := range ins {
+		if in.Kind != inputs.File {
+			continue
+		}
+
+		name := strings.ToLower(Name(in, "", FormatText, full[i]))
+		if j, ok := seen[name]; ok {
+			return fmt.Errorf(errSameFileTemplate, getLabel(ins[j]), getLabel(in))
+		}
+
+		seen[name] = i
+	}
+
+	return nil
 }
 
 func getLabel(in inputs.Input) string {
