@@ -6,9 +6,13 @@ import (
 )
 
 const (
-	StatusCompleted = "completed"
-	StatusFailed    = "failed"
-	StatusCanceled  = "canceled"
+	StatusAwaitingUpload = "awaiting_upload"
+	StatusQueued         = "queued"
+	StatusFetching       = "fetching"
+	StatusTranscribing   = "transcribing"
+	StatusCompleted      = "completed"
+	StatusFailed         = "failed"
+	StatusCanceled       = "canceled"
 )
 
 type Transcription struct {
