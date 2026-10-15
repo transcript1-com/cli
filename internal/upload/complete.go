@@ -11,7 +11,7 @@ import (
 const errUnplannedChunk = "the server reported chunk %v missing, which is not in the upload plan: %w"
 
 func (u *uploader) complete(ctx context.Context) (*api.Transcription, error) {
-	t, err := u.c.CompleteUpload(ctx, u.id)
+	t, err := u.completeOnce(ctx)
 	if !api.IsCode(err, api.CodeUploadIncomplete) {
 		return t, err
 	}
@@ -31,7 +31,25 @@ func (u *uploader) complete(ctx context.Context) (*api.Transcription, error) {
 		return nil, err
 	}
 
-	return u.c.CompleteUpload(ctx, u.id)
+	return u.completeOnce(ctx)
+}
+
+func (u *uploader) completeOnce(ctx context.Context) (*api.Transcription, error) {
+	for {
+		t, err := u.c.CompleteUpload(ctx, u.id)
+		busy, ok := api.SlotBusy(err)
+		if !ok {
+			return t, err
+		}
+
+		if u.opt.WaitSlot == nil {
+			return t, err
+		}
+
+		if err := u.opt.WaitSlot(ctx, busy); err != nil {
+			return nil, err
+		}
+	}
 }
 
 func (u *uploader) findMissing(err error) ([]api.Chunk, error) {

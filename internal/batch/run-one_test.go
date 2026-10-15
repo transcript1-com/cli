@@ -128,7 +128,30 @@ func TestJSONToStdoutSkipsTheRender(t *testing.T) {
 		t.Fatalf("result %+v", res)
 	}
 
-	if len(res.T.Raw) == 0 {
+	if !strings.Contains(string(res.T.Raw), `"transcript"`) {
+		t.Fatalf("result %+v", res)
+	}
+
+	for _, req := range srv.Requests() {
+		if req.Query.Has("format") {
+			t.Fatalf("render request %v", req.Query)
+		}
+	}
+}
+
+func TestReusedJSONToStdoutHasTheTranscript(t *testing.T) {
+	_, c := setup(t)
+	run(t, c, buildLink(rickID), Options{})
+	res := run(t, c, buildLink(rickID), Options{JSON: true})
+	if res.Status != Done {
+		t.Fatalf("result %+v", res)
+	}
+
+	if !res.T.Reused {
+		t.Fatalf("result %+v", res)
+	}
+
+	if !strings.Contains(string(res.T.Raw), `"transcript"`) {
 		t.Fatalf("result %+v", res)
 	}
 }

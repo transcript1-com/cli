@@ -2,8 +2,6 @@ package batch
 
 import (
 	"context"
-	"errors"
-	"net/http"
 	"time"
 
 	"github.com/transcript1/cli/internal/api"
@@ -22,15 +20,25 @@ func (r *runner) create(ctx context.Context) (*api.Transcription, error) {
 
 	for {
 		t, err := r.createOnce(ctx, key)
-		if !isSlotBusy(err) {
+		busy, ok := api.SlotBusy(err)
+		if !ok {
 			return t, err
 		}
 
-		r.send(WaitingSlot)
-		if err := r.c.Sleep(ctx, getSlotDelay(err)); err != nil {
+		if err := r.waitSlot(ctx, busy); err != nil {
 			return nil, err
 		}
 	}
+}
+
+func (r *runner) waitSlot(ctx context.Context, err *api.Error) error {
+	r.send(WaitingSlot)
+	delay := err.RetryAfter
+	if delay <= 0 {
+		delay = defaultSlotWait
+	}
+
+	return r.c.Sleep(ctx, delay)
 }
 
 func (r *runner) createOnce(ctx context.Context, key string) (*api.Transcription, error) {
@@ -52,6 +60,7 @@ func (r *runner) upload(ctx context.Context, key string) (*api.Transcription, er
 		Create:         api.CreateOptions{Language: r.opt.Language, Diarize: r.opt.Speakers},
 		IdempotencyKey: key,
 		Created:        func(id string) { r.id = id },
+		WaitSlot:       r.waitSlot,
 		Progress: func(sent, total int64) {
 			r.emit(Event{
 				Index: r.idx,
@@ -62,30 +71,4 @@ func (r *runner) upload(ctx context.Context, key string) (*api.Transcription, er
 			})
 		},
 	})
-}
-
-func isSlotBusy(err error) bool {
-	var apiErr *api.Error
-	if !errors.As(err, &apiErr) {
-		return false
-	}
-
-	if apiErr.Status != http.StatusTooManyRequests {
-		return false
-	}
-
-	return api.IsCode(err, api.CodeTooManyActiveJobs, api.CodeRateLimited)
-}
-
-func getSlotDelay(err error) time.Duration {
-	var apiErr *api.Error
-	if !errors.As(err, &apiErr) {
-		return defaultSlotWait
-	}
-
-	if apiErr.RetryAfter > 0 {
-		return apiErr.RetryAfter
-	}
-
-	return defaultSlotWait
 }

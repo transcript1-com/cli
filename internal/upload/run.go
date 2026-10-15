@@ -20,6 +20,7 @@ type Options struct {
 	Parallel       int
 	Created        func(id string)
 	Progress       func(sent, total int64)
+	WaitSlot       func(ctx context.Context, err *api.Error) error
 }
 
 func Run(ctx context.Context, c *api.Client, in inputs.Input, opt Options) (*api.Transcription, error) {

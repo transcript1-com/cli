@@ -27,8 +27,7 @@ func (r *runner) isJSONToStdout() bool {
 
 func (r *runner) writeOutput(ctx context.Context, res Result) Result {
 	if r.isJSONToStdout() {
-		res.Status = Done
-		return res
+		return r.writeObject(ctx, res)
 	}
 
 	data, err := r.buildContent(ctx, &res)
@@ -71,17 +70,37 @@ func (r *runner) buildContent(ctx context.Context, res *Result) ([]byte, error) 
 		return addNewline(data), err
 	}
 
-	if !hasTranscript(res.T.Raw) {
-		t, err := r.c.Get(ctx, res.T.ID, 0)
-		if err != nil {
-			return nil, err
-		}
-
-		t.Reused = res.T.Reused
-		res.T = t
+	if err := r.loadTranscript(ctx, res); err != nil {
+		return nil, err
 	}
 
 	return addNewline(res.T.Raw), nil
+}
+
+func (r *runner) writeObject(ctx context.Context, res Result) Result {
+	if err := r.loadTranscript(ctx, &res); err != nil {
+		return markFailed(res, err)
+	}
+
+	res.Status = Done
+
+	return res
+}
+
+func (r *runner) loadTranscript(ctx context.Context, res *Result) error {
+	if hasTranscript(res.T.Raw) {
+		return nil
+	}
+
+	t, err := r.c.Get(ctx, res.T.ID, 0)
+	if err != nil {
+		return err
+	}
+
+	t.Reused = res.T.Reused
+	res.T = t
+
+	return nil
 }
 
 // a reused job can come back without its transcript

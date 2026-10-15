@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -124,7 +125,98 @@ func TestWaitsForSlot(t *testing.T) {
 	})
 }
 
+func TestFileWaitsForSlotAtComplete(t *testing.T) {
+	srv, c := setup(t)
+	srv.ActiveLimit = 1
+	held, err := c.CreateLink(context.Background(), "held", buildLink("aaaaaaaaaaa").URL, api.CreateOptions{}, 0, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var ev events
+	emit := func(e Event) {
+		ev.emit(e)
+		if e.Stage == WaitingSlot {
+			_, _ = c.Get(context.Background(), held.ID, 0)
+		}
+	}
+
+	res := runOne(context.Background(), c, 0, buildFileInput(t, "talk.mp3"), Options{}, false, emit)
+
+	if res.Status != Done {
+		t.Fatalf("result %+v stages %v", res, ev.listStages())
+	}
+
+	if !ev.has(WaitingSlot) {
+		t.Fatalf("result %+v stages %v", res, ev.listStages())
+	}
+
+	puts := map[int]int{}
+	for _, req := range srv.Requests() {
+		if req.Chunk >= 0 {
+			puts[req.Chunk]++
+		}
+	}
+
+	for index, n := range puts {
+		if n != 1 {
+			t.Fatalf("chunk %d sent %d times", index, n)
+		}
+	}
+
+	n := countComplete(srv.Log())
+	if n < 2 {
+		t.Fatalf("%d completes, chunks %v", n, puts)
+	}
+
+	if len(puts) != 3 {
+		t.Fatalf("%d completes, chunks %v", n, puts)
+	}
+}
+
+func countComplete(log []string) int {
+	n := 0
+	for _, line := range log {
+		if strings.HasSuffix(line, "/upload/complete") {
+			n++
+		}
+	}
+
+	return n
+}
+
 func TestInterrupted(t *testing.T) {
+	t.Run("reports the created upload when canceled while sending chunks", func(t *testing.T) {
+		srv, c := setup(t)
+		srv.BlockChunks = make(chan struct{})
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		go func() {
+			for srv.PeakChunks() == 0 {
+				time.Sleep(time.Millisecond)
+			}
+
+			cancel()
+		}()
+
+		res := runOne(ctx, c, 0, buildFileInput(t, "talk.mp3"), Options{}, false, nil)
+		if res.Status != Interrupted {
+			t.Fatalf("result %+v", res)
+		}
+
+		if res.T == nil {
+			t.Fatalf("result %+v", res)
+		}
+
+		if res.T.ID != "tr_1" {
+			t.Fatalf("result %+v", res)
+		}
+
+		if res.T.Status != api.StatusAwaitingUpload {
+			t.Fatalf("result %+v", res)
+		}
+	})
+
 	t.Run("does not start after the context is canceled", func(t *testing.T) {
 		srv, c := setup(t)
 		ctx, cancel := context.WithCancel(context.Background())
