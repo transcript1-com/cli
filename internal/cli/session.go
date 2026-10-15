@@ -38,11 +38,19 @@ func (s *settings) getMode(env Env) output.Mode {
 		return output.JSON
 	case s.quiet:
 		return output.Quiet
-	case env.StderrTTY:
+	case canUseEscapes(env):
 		return output.TTY
 	}
 
 	return output.Plain
+}
+
+func canUseEscapes(env Env) bool {
+	if !env.StderrTTY {
+		return false
+	}
+
+	return output.EnableEscapes(env.Stderr)
 }
 
 func (ss *session) emit(e batch.Event) {
