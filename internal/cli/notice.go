@@ -69,6 +69,7 @@ func startNotice(ctx context.Context, env Env, s *settings) *notice {
 	return n
 }
 
+// a ready line goes first, select would pick at random
 func (n *notice) print(ctx context.Context, env Env) {
 	if n == nil {
 		return
@@ -78,14 +79,25 @@ func (n *notice) print(ctx context.Context, env Env) {
 		return
 	}
 
+	select {
+	case line := <-n.line:
+		writeNotice(env, line)
+		return
+	default:
+	}
+
 	timer := time.NewTimer(time.Until(n.deadline))
 	defer timer.Stop()
 	select {
 	case line := <-n.line:
-		if line != "" {
-			fmt.Fprintln(env.Stderr, line)
-		}
+		writeNotice(env, line)
 	case <-timer.C:
 	case <-ctx.Done():
+	}
+}
+
+func writeNotice(env Env, line string) {
+	if line != "" {
+		fmt.Fprintln(env.Stderr, line)
 	}
 }
