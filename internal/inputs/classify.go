@@ -14,6 +14,17 @@ func classify(raw string) ([]Input, error) {
 		return []Input{in}, err
 	}
 
+	_, err := os.Stat(raw)
+	if errors.Is(err, fs.ErrNotExist) {
+		if hasPatternChars(raw) {
+			return expandPattern(raw)
+		}
+	}
+
+	return classifyPath(raw)
+}
+
+func classifyPath(raw string) ([]Input, error) {
 	info, err := os.Stat(raw)
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, fmt.Errorf("%s: no such file or folder", raw)

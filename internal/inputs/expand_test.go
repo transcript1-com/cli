@@ -174,3 +174,109 @@ func TestExpandFile(t *testing.T) {
 		expectError(t, []string{"nope.mp3"}, "nope.mp3: no such file or folder")
 	})
 }
+
+func TestExpandPattern(t *testing.T) {
+	t.Run("expands a pattern to the matching files in order", func(t *testing.T) {
+		dir := t.TempDir()
+		touch(t, dir, "rec/b.mp3", 1)
+		touch(t, dir, "rec/a.mp3", 1)
+		touch(t, dir, "rec/c.wav", 1)
+		t.Chdir(dir)
+		got, err := Expand([]string{"rec/*.mp3"}, strings.NewReader(""))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if want := []string{"a.mp3", "b.mp3"}; !reflect.DeepEqual(listNames(got), want) {
+			t.Fatalf("got names %q", listNames(got))
+		}
+	})
+
+	t.Run("lists a file once when a pattern and its name both match", func(t *testing.T) {
+		dir := t.TempDir()
+		touch(t, dir, "a.mp3", 1)
+		touch(t, dir, "b.mp3", 1)
+		t.Chdir(dir)
+		got, err := Expand([]string{"a.mp3", "*.mp3"}, strings.NewReader(""))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if want := []string{"a.mp3", "b.mp3"}; !reflect.DeepEqual(listNames(got), want) {
+			t.Fatalf("got names %q", listNames(got))
+		}
+	})
+
+	t.Run("expands patterns read from stdin", func(t *testing.T) {
+		dir := t.TempDir()
+		touch(t, dir, "a.mp3", 1)
+		t.Chdir(dir)
+		got, err := Expand([]string{"-"}, strings.NewReader("*.mp3\n"))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if want := []string{"a.mp3"}; !reflect.DeepEqual(listNames(got), want) {
+			t.Fatalf("got names %q", listNames(got))
+		}
+	})
+
+	t.Run("skips hidden files unless the pattern names a dot", func(t *testing.T) {
+		dir := t.TempDir()
+		touch(t, dir, "a.mp3", 1)
+		touch(t, dir, ".hidden.mp3", 1)
+		t.Chdir(dir)
+		got, err := Expand([]string{"*.mp3"}, strings.NewReader(""))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if want := []string{"a.mp3"}; !reflect.DeepEqual(listNames(got), want) {
+			t.Fatalf("got names %q", listNames(got))
+		}
+	})
+
+	t.Run("errors when nothing matches", func(t *testing.T) {
+		t.Chdir(t.TempDir())
+		expectError(t, []string{"rec/*.mp3"}, "no files match rec/*.mp3")
+	})
+
+	t.Run("errors on a malformed pattern", func(t *testing.T) {
+		t.Chdir(t.TempDir())
+		expectError(t, []string{"rec/[.mp3"}, "rec/[.mp3", "pattern")
+	})
+
+	t.Run("uses an existing file whose name has pattern characters as is", func(t *testing.T) {
+		dir := t.TempDir()
+		touch(t, dir, "what?.mp3", 1)
+		touch(t, dir, "whats.mp3", 1)
+		t.Chdir(dir)
+		got, err := Expand([]string{"what?.mp3"}, strings.NewReader(""))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if want := []string{"what?.mp3"}; !reflect.DeepEqual(listNames(got), want) {
+			t.Fatalf("got names %q", listNames(got))
+		}
+	})
+
+	t.Run("never expands a link", func(t *testing.T) {
+		dir := t.TempDir()
+		touch(t, dir, "dQw4w9WgXcQ?si=x", 1)
+		t.Chdir(dir)
+		got, err := Expand([]string{"https://youtu.be/dQw4w9WgXcQ?si=x"}, strings.NewReader(""))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if len(got) != 1 || got[0].Kind != Link {
+			t.Fatalf("got %+v", got)
+		}
+	})
+
+	t.Run("keeps the old error for a missing name without pattern characters", func(t *testing.T) {
+		t.Chdir(t.TempDir())
+		expectError(t, []string{"nope.mp3"}, "nope.mp3: no such file or folder")
+	})
+}

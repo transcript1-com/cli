@@ -54,6 +54,7 @@ func TestUsageErrors(t *testing.T) {
 			args: []string{"Talk.mp3", "talk.wav"},
 			want: "Talk.mp3 and talk.wav would write the same file",
 		},
+		{name: "a file pattern with no match", args: []string{"nope/*.mp3"}, want: "no files match nope/*.mp3"},
 		{name: "zero jobs", args: []string{"--jobs", "0", rickLink}, want: "--jobs"},
 		{name: "too many jobs", args: []string{"--jobs", "21", rickLink}, want: "--jobs"},
 		{name: "no inputs", args: []string{"-"}, want: "no inputs: pass a YouTube link, a file or a folder"},
