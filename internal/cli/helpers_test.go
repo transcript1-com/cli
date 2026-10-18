@@ -9,7 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/transcript1-com/cli/internal/config"
 	"github.com/transcript1-com/cli/internal/fakeapi"
@@ -33,6 +35,15 @@ type harness struct {
 	secret func() (string, error)
 	stdout io.Writer
 	tty    bool
+
+	browser bool
+	opened  []string
+	openErr error
+
+	mu      sync.Mutex
+	now     time.Time
+	sleeps  []time.Duration
+	onSleep func()
 }
 
 type failingWriter struct{}
@@ -55,7 +66,37 @@ func newHarness(t *testing.T) *harness {
 	srv := fakeapi.New(t)
 	env := map[string]string{config.EnvAPIURL: srv.URL, config.EnvAPIKey: srv.Key}
 
-	return &harness{t: t, srv: srv, env: env}
+	return &harness{
+		t:   t,
+		srv: srv,
+		env: env,
+		now: time.Date(2026, time.October, 18, 12, 0, 0, 0, time.UTC),
+	}
+}
+
+func (h *harness) openBrowser(url string) error {
+	h.opened = append(h.opened, url)
+
+	return h.openErr
+}
+
+func (h *harness) sleep(ctx context.Context, d time.Duration) error {
+	h.mu.Lock()
+	h.sleeps = append(h.sleeps, d)
+	h.now = h.now.Add(d)
+	h.mu.Unlock()
+	if h.onSleep != nil {
+		h.onSleep()
+	}
+
+	return ctx.Err()
+}
+
+func (h *harness) clock() time.Time {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	return h.now
 }
 
 func (h *harness) run(args ...string) outcome {
@@ -72,6 +113,11 @@ func (h *harness) runWith(ctx context.Context, args ...string) outcome {
 		StdinTTY:   h.secret != nil,
 		StderrTTY:  h.tty,
 		ReadSecret: h.secret,
+		Sleep:      h.sleep,
+		Now:        h.clock,
+	}
+	if h.browser {
+		env.OpenBrowser = h.openBrowser
 	}
 
 	code := Run(ctx, args, env)

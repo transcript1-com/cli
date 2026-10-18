@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/transcript1-com/cli/internal/browser"
 	"github.com/transcript1-com/cli/internal/cli"
 	"github.com/transcript1-com/cli/internal/update"
 	"golang.org/x/term"
@@ -24,13 +25,14 @@ func main() {
 	go handleSignals(signals, cancel, restore, os.Exit)
 
 	env := cli.Env{
-		Stdin:      os.Stdin,
-		Stdout:     os.Stdout,
-		Stderr:     os.Stderr,
-		Getenv:     os.Getenv,
-		StdinTTY:   term.IsTerminal(int(os.Stdin.Fd())),
-		StderrTTY:  term.IsTerminal(int(os.Stderr.Fd())),
-		ReadSecret: readSecret,
+		Stdin:       os.Stdin,
+		Stdout:      os.Stdout,
+		Stderr:      os.Stderr,
+		Getenv:      os.Getenv,
+		StdinTTY:    term.IsTerminal(int(os.Stdin.Fd())),
+		StderrTTY:   term.IsTerminal(int(os.Stderr.Fd())),
+		ReadSecret:  readSecret,
+		OpenBrowser: browser.Open,
 	}
 	code := cli.Run(ctx, os.Args[1:], env)
 	cancel()

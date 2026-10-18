@@ -1,8 +1,10 @@
 package cli
 
 import (
+	"context"
 	"io"
 	"strings"
+	"time"
 )
 
 type Env struct {
@@ -11,6 +13,9 @@ type Env struct {
 	Getenv              func(string) string
 	StdinTTY, StderrTTY bool
 	ReadSecret          func() (string, error)
+	OpenBrowser         func(string) error
+	Sleep               func(context.Context, time.Duration) error
+	Now                 func() time.Time
 }
 
 func (e Env) applyDefaults() Env {
@@ -30,5 +35,24 @@ func (e Env) applyDefaults() Env {
 		e.Getenv = func(string) string { return "" }
 	}
 
+	if e.Sleep == nil {
+		e.Sleep = sleepContext
+	}
+
+	if e.Now == nil {
+		e.Now = time.Now
+	}
+
 	return e
+}
+
+func sleepContext(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }
