@@ -30,8 +30,15 @@ xattr -d com.apple.quarantine transcript1
 transcript1 login
 ```
 
-`login` checks your API key before saving it. For scripts and agents, set `TRANSCRIPT1_API_KEY`; it takes priority over the
-saved key. `transcript1 logout` removes the saved key.
+`transcript1 login` opens transcript1.com, or prints the link over SSH or without a display. Compare the terminal's code
+with the page and click Approve. The CLI waits for approval and saves a key named `transcript1 CLI (<computer name>)`.
+It appears on the [API keys page](https://transcript1.com/dashboard/account/tokens). Use `--no-browser` to print the link without
+opening a browser. To paste a key, run `transcript1 login --with-key`. Piped input still works: `transcript1 login < key.txt`.
+
+For CI and agents, set `TRANSCRIPT1_API_KEY`; it takes priority over the saved key. An agent without a terminal or a key
+can run `transcript1 login < /dev/null` and send you the link to approve. `transcript1 logout` revokes the CLI key and
+removes it from your computer. If revocation fails, it removes the saved key and asks you to revoke it on the API keys
+page. Pasted keys must be revoked on that page.
 
 ## Use
 
