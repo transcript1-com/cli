@@ -56,7 +56,7 @@ func TestUsageErrors(t *testing.T) {
 		},
 		{name: "zero jobs", args: []string{"--jobs", "0", rickLink}, want: "--jobs"},
 		{name: "too many jobs", args: []string{"--jobs", "21", rickLink}, want: "--jobs"},
-		{name: "no inputs", args: nil, want: "no inputs: pass a YouTube link, a file or a folder"},
+		{name: "no inputs", args: []string{"-"}, want: "no inputs: pass a YouTube link, a file or a folder"},
 		{
 			name:  "an output folder under a file",
 			setup: func(h *harness) { h.write("blocker", "x") },

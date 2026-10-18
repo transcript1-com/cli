@@ -21,7 +21,8 @@ const (
 func Run(ctx context.Context, args []string, env Env) int {
 	env = env.applyDefaults()
 	if len(args) == 0 {
-		return transcribe(ctx, args, env)
+		fmt.Fprint(env.Stdout, helpText)
+		return exitOK
 	}
 
 	switch args[0] {

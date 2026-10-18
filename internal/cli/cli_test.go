@@ -210,6 +210,27 @@ func TestHelpAndVersion(t *testing.T) {
 		}
 	})
 
+	t.Run("prints the help without arguments", func(t *testing.T) {
+		h := newHarness(t)
+		want := h.run("--help")
+		got := h.run()
+		if got.code != 0 {
+			t.Fatalf("code %d stderr %q", got.code, got.stderr)
+		}
+
+		if got.stderr != "" {
+			t.Fatalf("code %d stderr %q", got.code, got.stderr)
+		}
+
+		if got.stdout != want.stdout {
+			t.Fatalf("stdout %q, want %q", got.stdout, want.stdout)
+		}
+
+		if log := h.srv.Log(); len(log) != 0 {
+			t.Fatalf("requests sent: %v", log)
+		}
+	})
+
 	t.Run("prints the version", func(t *testing.T) {
 		h := newHarness(t)
 		got := h.run("--version")
