@@ -31,9 +31,11 @@ Flags:
 get accepts -f, -o, --timestamps, --no-wait, --json and -q.
 
 Examples:
-  transcript1 https://youtu.be/dQw4w9WgXcQ
+  transcript1 'https://youtu.be/dQw4w9WgXcQ'
   transcript1 -f srt -o interview.srt interview.mp3
   transcript1 -o transcripts/ ./recordings
 
+Tip: in zsh, quote links that contain ? or &, or use the alias the installer adds.
+t1 is a short alias for transcript1.
 Sign in first with transcript1 login, or set TRANSCRIPT1_API_KEY.
 `

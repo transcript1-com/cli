@@ -36,18 +36,20 @@ saved key. `transcript1 logout` removes the saved key.
 ## Use
 
 ```sh
-transcript1 https://youtu.be/dQw4w9WgXcQ
+transcript1 'https://youtu.be/dQw4w9WgXcQ'
 transcript1 -f srt -o interview.srt interview.mp3
 transcript1 -o transcripts/ ./recordings
 ```
 
 By default, one input prints to stdout. Several inputs save one file each in `./transcripts`. Run `transcript1 --help`
-for every flag.
+(or `transcript1` alone) for every flag. `t1` is a short alias for `transcript1`.
+
+Tip: in zsh, quote links that contain `?` or `&`, or use the alias the installer adds.
 
 Use `--json` to print one JSON line per input to stdout, with no progress or summary:
 
 ```sh
-transcript1 --json https://youtu.be/dQw4w9WgXcQ
+transcript1 --json 'https://youtu.be/dQw4w9WgXcQ'
 ```
 
 Run `transcript1 get <id>` to fetch an earlier transcription.
@@ -82,7 +84,7 @@ Set up releases once:
 2. `go run ./cmd/release-tool keygen <path outside the repo>`. Commit `internal/update/release-key.pub`, back up the
    private key, and keep its path in `TRANSCRIPT1_RELEASE_KEY_FILE`.
 3. Optional: create the GitHub repo `transcript1-com/cli` and run `gh auth login` for the mirror.
-4. Run `scripts/release.sh 1.0.0`, then deploy the site.
+4. Run `scripts/release.sh <version>`, then deploy the site.
 
 `scripts/release.sh <version>` (strictly `x.y.z`) checks the working tree, runs vet and tests, builds the five targets,
 packages them, signs `latest.json`, uploads to R2 and verifies the public URLs. release.sh tags locally; push master and
