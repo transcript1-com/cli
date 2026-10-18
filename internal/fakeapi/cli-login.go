@@ -121,9 +121,14 @@ func (s *Server) writeLoginOutcome(w http.ResponseWriter) {
 		return
 	}
 
+	key := s.Key
+	if s.LoginKey != "" {
+		key = s.LoginKey
+	}
+
 	writeJSON(w, http.StatusOK, map[string]any{
 		"status":   api.LoginApproved,
-		"api_key":  s.Key,
+		"api_key":  key,
 		"token_id": s.LoginTokenID,
 		"email":    "demo@transcript1.com",
 	})

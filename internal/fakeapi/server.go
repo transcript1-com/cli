@@ -43,6 +43,7 @@ type Server struct {
 	LoginOutcome      string
 	LoginCreateStatus int
 	LoginTokenID      string
+	LoginKey          string
 	RevokeStatus      int
 
 	mu              sync.Mutex
@@ -112,8 +113,16 @@ func (s *Server) requireAuth(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 		key := s.Key
+		loginKey := s.LoginKey
 		s.mu.Unlock()
-		if r.Header.Get("Authorization") != "Bearer "+key {
+		auth := r.Header.Get("Authorization")
+		if loginKey != "" && auth == "Bearer "+loginKey {
+			h(w, r)
+
+			return
+		}
+
+		if auth != "Bearer "+key {
 			w.Header().Set("WWW-Authenticate", `Bearer realm="transcript1"`)
 			writeError(w, http.StatusUnauthorized, api.CodeUnauthorized, "Invalid or missing API key", nil)
 
