@@ -31,7 +31,7 @@ func Run(ctx context.Context, args []string, env Env) int {
 	case commandLogin:
 		return login(ctx, args[1:], env)
 	case commandLogout:
-		return logout(args[1:], env)
+		return logout(ctx, args[1:], env)
 	case commandUpdate:
 		return update(ctx, args[1:], env)
 	}

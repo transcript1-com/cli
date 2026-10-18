@@ -190,7 +190,7 @@ func TestLogout(t *testing.T) {
 		t.Fatalf("code %d stdout %q stderr %q", got.code, got.stdout, got.stderr)
 	}
 
-	if got.stdout != "Signed out.\n" {
+	if got.stdout != stillWorksLine {
 		t.Fatalf("code %d stdout %q stderr %q", got.code, got.stdout, got.stderr)
 	}
 
