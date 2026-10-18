@@ -37,3 +37,21 @@ const (
 const (
 	CodeUploadTokenRefused = "upload_token_refused"
 )
+
+const (
+	CodeValidationError    = "validation_error"
+	CodeRateLimitExceeded  = "rate_limit_exceeded"
+	CodeCliLoginNotFound   = "cli_login_not_found"
+	CodeCliLoginDenied     = "cli_login_denied"
+	CodeCliLoginExpired    = "cli_login_expired"
+	CodeCliLoginConsumed   = "cli_login_consumed"
+	CodePatLimitReached    = "pat_limit_reached"
+	CodePatNotFound        = "pat_not_found"
+	CodeAuthInvalidSession = "auth_invalid_session"
+)
+
+const (
+	LoginPending  = "pending"
+	LoginSlowDown = "slow_down"
+	LoginApproved = "approved"
+)

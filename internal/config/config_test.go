@@ -213,3 +213,99 @@ func TestURLsDefaultAndOverride(t *testing.T) {
 		}
 	})
 }
+
+func TestKeyFileTokenID(t *testing.T) {
+	isolate(t)
+
+	t.Run("saves the api key and token id and loads them back", func(t *testing.T) {
+		if err := SaveKeyFile(KeyFile{APIKey: "t1_a", TokenID: "tok"}); err != nil {
+			t.Fatal(err)
+		}
+
+		path, _ := KeyPath()
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if string(raw) != `{"api_key":"t1_a","token_id":"tok"}` {
+			t.Fatalf("file = %s", raw)
+		}
+
+		got, err := LoadKeyFile()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if got != (KeyFile{APIKey: "t1_a", TokenID: "tok"}) {
+			t.Fatalf("LoadKeyFile() = %+v", got)
+		}
+	})
+
+	t.Run("SaveKey writes no token id", func(t *testing.T) {
+		if err := SaveKey("t1_a"); err != nil {
+			t.Fatal(err)
+		}
+
+		path, _ := KeyPath()
+		raw, _ := os.ReadFile(path)
+		if string(raw) != `{"api_key":"t1_a"}` {
+			t.Fatalf("file = %s", raw)
+		}
+
+		got, err := LoadKeyFile()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if got.TokenID != "" {
+			t.Fatalf("TokenID = %q, want empty", got.TokenID)
+		}
+	})
+
+	t.Run("LoadKey ignores the token id", func(t *testing.T) {
+		if err := SaveKeyFile(KeyFile{APIKey: "t1_b", TokenID: "tok"}); err != nil {
+			t.Fatal(err)
+		}
+
+		got, err := LoadKey()
+		if err != nil || got != "t1_b" {
+			t.Fatalf("LoadKey() = %q, %v", got, err)
+		}
+	})
+
+	t.Run("loads a zero value when the file is missing", func(t *testing.T) {
+		if err := DeleteKey(); err != nil {
+			t.Fatal(err)
+		}
+
+		got, err := LoadKeyFile()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if got != (KeyFile{}) {
+			t.Fatalf("LoadKeyFile() = %+v, want zero", got)
+		}
+	})
+
+	t.Run("keeps mode 0600", func(t *testing.T) {
+		if runtime.GOOS == "windows" {
+			t.Skip("unix modes only")
+		}
+
+		if err := SaveKeyFile(KeyFile{APIKey: "t1_a", TokenID: "tok"}); err != nil {
+			t.Fatal(err)
+		}
+
+		path, _ := KeyPath()
+		info, err := os.Stat(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if got := info.Mode().Perm(); got != 0o600 {
+			t.Fatalf("file mode = %o, want 600", got)
+		}
+	})
+}

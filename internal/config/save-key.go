@@ -7,6 +7,10 @@ import (
 )
 
 func SaveKey(key string) error {
+	return SaveKeyFile(KeyFile{APIKey: key})
+}
+
+func SaveKeyFile(file KeyFile) error {
 	path, err := KeyPath()
 	if err != nil {
 		return err
@@ -17,7 +21,7 @@ func SaveKey(key string) error {
 		return err
 	}
 
-	body, err := json.Marshal(keyFile{APIKey: key})
+	body, err := json.Marshal(file)
 	if err != nil {
 		return err
 	}

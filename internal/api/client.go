@@ -257,6 +257,25 @@ func (c *Client) postJSON(ctx context.Context, path string, query url.Values, id
 	return c.do(ctx, r, false)
 }
 
+func (c *Client) postPublicJSON(ctx context.Context, path string, payload any, retry429 bool) (*response, error) {
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	r := &request{
+		method:  http.MethodPost,
+		url:     c.buildURL(path, nil),
+		header:  http.Header{"Content-Type": {"application/json"}},
+		body:    func() (io.Reader, error) { return bytes.NewReader(raw), nil },
+		length:  int64(len(raw)),
+		timeout: defaultTimeout,
+		noAuth:  true,
+	}
+
+	return c.do(ctx, r, retry429)
+}
+
 func decodeTranscription(res *response) (*Transcription, error) {
 	tr := &Transcription{}
 	if err := json.Unmarshal(res.Body, tr); err != nil {

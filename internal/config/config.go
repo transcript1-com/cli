@@ -13,6 +13,7 @@ const (
 	fileName = "config.json"
 )
 
-type keyFile struct {
-	APIKey string `json:"api_key"`
+type KeyFile struct {
+	APIKey  string `json:"api_key"`
+	TokenID string `json:"token_id,omitempty"`
 }

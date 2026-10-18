@@ -9,24 +9,33 @@ import (
 )
 
 func LoadKey() (string, error) {
-	path, err := KeyPath()
+	file, err := LoadKeyFile()
 	if err != nil {
 		return "", err
+	}
+
+	return file.APIKey, nil
+}
+
+func LoadKeyFile() (KeyFile, error) {
+	path, err := KeyPath()
+	if err != nil {
+		return KeyFile{}, err
 	}
 
 	body, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
-		return "", nil
+		return KeyFile{}, nil
 	}
 
 	if err != nil {
-		return "", err
+		return KeyFile{}, err
 	}
 
-	var file keyFile
+	var file KeyFile
 	if err := json.Unmarshal(body, &file); err != nil {
-		return "", fmt.Errorf("read %s: %w", path, err)
+		return KeyFile{}, fmt.Errorf("read %s: %w", path, err)
 	}
 
-	return file.APIKey, nil
+	return file, nil
 }

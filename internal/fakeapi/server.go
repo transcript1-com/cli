@@ -35,6 +35,16 @@ type Server struct {
 	PollErrorStatus int
 	PollDrop        bool
 
+	LoginInterval     int
+	LoginExpiresIn    int
+	LoginPending      int
+	LoginSlowDowns    int
+	LoginPollErrors   int
+	LoginOutcome      string
+	LoginCreateStatus int
+	LoginTokenID      string
+	RevokeStatus      int
+
 	mu              sync.Mutex
 	pollErrors      int
 	srv             *httptest.Server
@@ -50,19 +60,27 @@ type Server struct {
 	peakChunks      int
 	peakActive      int
 	completeDropped bool
+	loginErrors     int
+	loginPendings   int
+	loginSlowDowns  int
+	loginRaised     int
 }
 
 func New(t testing.TB) *Server {
 	t.Helper()
 	s := &Server{
-		Key:           "t1_test",
-		ChunkSize:     8,
-		Polls:         1,
-		MinutesLeft:   -1,
-		MinutesPerJob: 1,
-		closing:       make(chan struct{}),
-		jobs:          map[string]*job{},
-		chunkCalls:    map[int]int{},
+		Key:            "t1_test",
+		ChunkSize:      8,
+		Polls:          1,
+		MinutesLeft:    -1,
+		MinutesPerJob:  1,
+		LoginInterval:  2,
+		LoginExpiresIn: 600,
+		LoginPending:   1,
+		LoginTokenID:   "tok-1",
+		closing:        make(chan struct{}),
+		jobs:           map[string]*job{},
+		chunkCalls:     map[int]int{},
 	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/transcriptions", s.requireAuth(s.create))
@@ -72,6 +90,10 @@ func New(t testing.TB) *Server {
 	mux.HandleFunc("GET /v1/transcriptions/{id}/upload", s.requireAuth(s.getProgress))
 	mux.HandleFunc("POST /v1/transcriptions/{id}/upload/complete", s.requireAuth(s.complete))
 	mux.HandleFunc("GET /v1/account", s.requireAuth(s.getAccount))
+	mux.HandleFunc("POST /cli/login-requests", s.createLogin)
+	mux.HandleFunc("POST /cli/login-requests/{id}/poll", s.pollLogin)
+	mux.HandleFunc("POST /cli/login-requests/{id}/cancel", s.cancelLogin)
+	mux.HandleFunc("DELETE /user/tokens/{tokenId}", s.requireAuth(s.revokeToken))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, api.CodeNotFound, "Route not found", nil)
 	})
