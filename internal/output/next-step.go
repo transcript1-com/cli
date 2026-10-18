@@ -19,14 +19,18 @@ const (
 	runAgainStep = "Run the command again"
 	fallbackStep = "Retry later; if it keeps failing, contact " + supportEmail
 	haveFileStep = "if you have the file, run transcript1 <file>"
+
+	platformNames = "YouTube, X, TikTok, Instagram, Facebook or Bluesky"
 )
+
+var defaultPlatforms = []string{"youtube", "x", "tiktok", "instagram", "facebook", "bluesky"}
 
 var steps = map[string]func(e *api.Error) string{
 	api.CodeInvalidRequest: func(*api.Error) string {
 		return "Check the input and options (transcript1 --help), then try again"
 	},
 	api.CodeInvalidURL: func(*api.Error) string {
-		return "Pass a single YouTube video link (youtube.com/watch?v=…, youtu.be/…, /shorts/, /embed/ or /live/)"
+		return "Pass a link to one video or post from " + platformNames + ", not a profile or playlist"
 	},
 	api.CodeUnsupportedPlatform: unsupportedPlatform,
 	api.CodeUnsupportedMedia: func(*api.Error) string {
@@ -56,16 +60,22 @@ var steps = map[string]func(e *api.Error) string{
 		return "transcript1 is temporarily unavailable; retry in a minute"
 	},
 	api.CodeMediaUnavailable: func(*api.Error) string {
-		return "Check that the link is right and the video plays on YouTube"
+		return "Check that the " + platformNames + " link is right and the video plays without signing in"
 	},
 	api.CodeMediaPrivate: func(*api.Error) string {
 		return "Only public or unlisted videos can be fetched; " + haveFileStep
+	},
+	api.CodeLoginRequired: func(*api.Error) string {
+		return "Only public posts can be fetched; " + haveFileStep
 	},
 	api.CodeAgeRestricted: func(*api.Error) string {
 		return "Age-restricted videos cannot be fetched; " + haveFileStep
 	},
 	api.CodeLiveStream: func(*api.Error) string {
 		return "Live and upcoming streams cannot be transcribed; retry after the stream has ended"
+	},
+	api.CodeNoAudio: func(*api.Error) string {
+		return "The video has no sound track (nothing was charged); pick a post with audio"
 	},
 	api.CodeNoCaptions: func(*api.Error) string { return "Run again with --source auto or --source stt" },
 	api.CodeMediaTooLong: func(*api.Error) string {
@@ -113,11 +123,11 @@ func actionURL(e *api.Error) string {
 func listPlatforms(e *api.Error) []string {
 	list, ok := e.Details["supported_platforms"].([]any)
 	if !ok {
-		return []string{"youtube"}
+		return defaultPlatforms
 	}
 
 	if len(list) == 0 {
-		return []string{"youtube"}
+		return defaultPlatforms
 	}
 
 	platforms := []string{}

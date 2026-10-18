@@ -63,18 +63,40 @@ func TestExpandLink(t *testing.T) {
 		}
 
 		want := Input{
-			Raw:     "https://youtu.be/dQw4w9WgXcQ?si=x",
-			Kind:    Link,
-			URL:     wantCanonical,
-			VideoID: wantID,
+			Raw:      "https://youtu.be/dQw4w9WgXcQ?si=x",
+			Kind:     Link,
+			Platform: "youtube",
+			URL:      wantCanonical,
+			VideoID:  wantID,
 		}
 		if got[0] != want {
 			t.Fatalf("got %+v", got[0])
 		}
 	})
 
-	t.Run("refuses a link that is not YouTube", func(t *testing.T) {
-		expectError(t, []string{"https://vimeo.com/1"}, "https://vimeo.com/1: Only YouTube links and files are supported for now")
+	t.Run("refuses a link from another site", func(t *testing.T) {
+		expectError(t, []string{"https://vimeo.com/1"}, "https://vimeo.com/1"+errUnsupported)
+	})
+
+	t.Run("keeps the trimmed link of another platform", func(t *testing.T) {
+		got, err := Expand([]string{"https://x.com/jack/status/20?s=20"}, strings.NewReader(""))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		want := Input{
+			Raw:      "https://x.com/jack/status/20?s=20",
+			Kind:     Link,
+			Platform: "x",
+			URL:      "https://x.com/jack/status/20?s=20",
+		}
+		if len(got) != 1 {
+			t.Fatalf("got %v", got)
+		}
+
+		if got[0] != want {
+			t.Fatalf("got %+v", got[0])
+		}
 	})
 }
 

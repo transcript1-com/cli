@@ -83,7 +83,26 @@ func (r *runner) complete(ctx context.Context, res Result) Result {
 		return markFailed(res, buildJobError(t))
 	}
 
+	r.nameLink(t)
+	res.Input = r.in
+
 	return r.writeOutput(ctx, res)
+}
+
+// a link with no local id is named after the media id, or the transcription id when the post has none
+func (r *runner) nameLink(t *api.Transcription) {
+	if r.in.Kind != inputs.Link {
+		return
+	}
+
+	if r.in.VideoID != "" {
+		return
+	}
+
+	r.in.VideoID = t.Source.MediaID
+	if r.in.VideoID == "" {
+		r.in.VideoID = t.ID
+	}
 }
 
 func (r *runner) emitFinished(res Result) Result {

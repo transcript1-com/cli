@@ -91,11 +91,16 @@ func (s *Server) serialize(j *job, transcript bool) map[string]any {
 		"filename": j.filename,
 		"size":     j.size,
 	}
-	if j.platform == "youtube" {
+	if j.platform != "upload" {
+		var mediaID any
+		if j.videoID != "" {
+			mediaID = j.videoID
+		}
+
 		obj["source"] = map[string]any{
-			"platform": "youtube",
+			"platform": j.platform,
 			"url":      j.url,
-			"media_id": j.videoID,
+			"media_id": mediaID,
 		}
 		obj["media"] = map[string]any{"title": j.title, "duration_seconds": 60 * s.MinutesPerJob}
 	}

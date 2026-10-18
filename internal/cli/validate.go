@@ -17,14 +17,14 @@ const (
 	errFormatTemplate   = "unknown format %q: use text, srt, vtt or json"
 	errSourceTemplate   = "unknown source %q: use auto, captions or stt"
 	errJobsTemplate     = "--jobs must be between %d and %d"
-	errCaptionsTemplate = "--source captions works with YouTube links only, and %s is a file"
+	errCaptionsTemplate = "--source captions works with YouTube links only, and %s is not one"
 )
 
 var (
 	formats = []string{files.FormatText, files.FormatSRT, files.FormatVTT, files.FormatJSON}
 	sources = []string{sourceAuto, sourceCaptions, sourceSTT}
 
-	errNoInputs   = errors.New("no inputs: pass a YouTube link, a file or a folder")
+	errNoInputs   = errors.New("no inputs: pass a YouTube, X, TikTok, Instagram, Facebook or Bluesky link, a file or a folder")
 	errTimestamps = errors.New("--timestamps works with --format text only")
 	errSpeakers   = errors.New("--speakers needs speech-to-text and cannot be used with --source captions")
 )
@@ -79,7 +79,7 @@ func validateInputs(s *settings, ins []inputs.Input) error {
 	}
 
 	for _, in := range ins {
-		if in.Kind == inputs.File {
+		if in.Platform != inputs.PlatformYouTube {
 			return fmt.Errorf(errCaptionsTemplate, in.Raw)
 		}
 	}

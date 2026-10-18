@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 func touch(t *testing.T, dir, name string) string {
@@ -53,6 +55,30 @@ func TestExisting(t *testing.T) {
 
 		if got, ok := Existing(dir, buildLinkInput(), "text", false); ok {
 			t.Fatalf("found %q", got)
+		}
+	})
+
+	t.Run("finds nothing for a link without a local id", func(t *testing.T) {
+		dir := t.TempDir()
+		touch(t, dir, "Anything [].txt")
+		touch(t, dir, "Anything [tr_1].txt")
+		in := inputs.Input{Kind: inputs.Link, Platform: "tiktok", URL: "https://vm.tiktok.com/ZMabcdEF"}
+		if got, ok := Existing(dir, in, "text", false); ok {
+			t.Fatalf("found %q", got)
+		}
+	})
+
+	t.Run("finds the output of a link whose media id has a slash", func(t *testing.T) {
+		dir := t.TempDir()
+		want := touch(t, dir, "Post [alice.bsky.social-3l6oveex3ii2l].txt")
+		in := inputs.Input{Kind: inputs.Link, VideoID: "alice.bsky.social/3l6oveex3ii2l"}
+		got, ok := Existing(dir, in, "text", false)
+		if !ok {
+			t.Fatalf("got %q, %v", got, ok)
+		}
+
+		if got != want {
+			t.Fatalf("got %q, %v", got, ok)
 		}
 	})
 

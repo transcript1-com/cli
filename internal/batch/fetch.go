@@ -49,13 +49,25 @@ func (r *runner) handleFetched(ctx context.Context, t *api.Transcription) Result
 	return r.complete(ctx, res)
 }
 
+func isLinkSource(src api.Source) bool {
+	if src.Platform == "" {
+		return false
+	}
+
+	return src.Platform != "upload"
+}
+
 func buildInput(t *api.Transcription) inputs.Input {
-	if t.Source.Platform == "youtube" {
+	if isLinkSource(t.Source) {
 		in := inputs.Input{
-			Raw:     t.Source.URL,
-			Kind:    inputs.Link,
-			URL:     t.Source.URL,
-			VideoID: t.Source.MediaID,
+			Raw:      t.Source.URL,
+			Kind:     inputs.Link,
+			Platform: t.Source.Platform,
+			URL:      t.Source.URL,
+			VideoID:  t.Source.MediaID,
+		}
+		if in.VideoID == "" {
+			in.VideoID = t.ID
 		}
 
 		return in

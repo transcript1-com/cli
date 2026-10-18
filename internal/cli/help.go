@@ -1,6 +1,7 @@
 package cli
 
-const helpText = `transcript1 transcribes YouTube links and local audio or video files.
+const helpText = `transcript1 transcribes links from YouTube, X, TikTok, Instagram, Facebook and Bluesky,
+and local audio or video files.
 
 Usage:
   transcript1 [flags] <input>...   transcribe links, files or folders
@@ -10,9 +11,10 @@ Usage:
   transcript1 update               install the latest release
   transcript1 --version | --help
 
-Pass a YouTube link, an audio or video file, or a folder of media files.
-Use - to read one input per line from stdin. By default, one input prints to
-stdout. Several inputs save one file each in ./transcripts.
+Pass a link, an audio or video file, or a folder of media files. A post with
+several videos gives the first one. Use - to read one input per line from stdin.
+By default, one input prints to stdout. Several inputs save one file each in
+./transcripts.
 
 Flags:
   -f, --format text|srt|vtt|json   output format (default text)
@@ -20,9 +22,9 @@ Flags:
       --speakers                   add speaker labels
       --timestamps                 put [hh:mm:ss] before each line (text only)
       --language <code>            ISO 639-1 code or auto (default auto)
-      --source auto|captions|stt   YouTube transcript source (default auto)
+      --source auto|captions|stt   transcript source; captions are YouTube only (default auto)
       --jobs <n>                   inputs running at once, 1-20 (default 2)
-      --fresh                      do not reuse a YouTube transcription from the last 24 hours
+      --fresh                      do not reuse a transcription of the same link from the last 24 hours
       --overwrite                  redo inputs whose output file already exists
       --no-wait                    start, print the id and status, and exit
       --json                       one JSON line per input on stdout

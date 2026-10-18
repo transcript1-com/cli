@@ -54,6 +54,18 @@ func TestName(t *testing.T) {
 		}
 	})
 
+	t.Run("keeps a media id with a slash or colon inside the file name", func(t *testing.T) {
+		in := inputs.Input{Kind: inputs.Link, VideoID: "alice.bsky.social/3l6oveex3ii2l"}
+		if got := Name(in, "Post", "text", false); got != "Post [alice.bsky.social-3l6oveex3ii2l].txt" {
+			t.Fatalf("got %q", got)
+		}
+
+		in.VideoID = "did:plc:z72i7hdynmk6r22z27h6tvur/3l6oveex3ii2l"
+		if got := Name(in, "Post", "text", false); got != "Post [did-plc-z72i7hdynmk6r22z27h6tvur-3l6oveex3ii2l].txt" {
+			t.Fatalf("got %q", got)
+		}
+	})
+
 	t.Run("keeps the whole video id suffix after a long title", func(t *testing.T) {
 		got := Name(buildLinkInput(), strings.Repeat("x", 300), "text", false)
 		want := strings.Repeat("x", 120) + " [dQw4w9WgXcQ].txt"

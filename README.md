@@ -1,6 +1,7 @@
 # transcript1
 
-transcript1 transcribes YouTube links and local audio or video files from your terminal.
+From your terminal, transcript1 transcribes links from YouTube, X, TikTok, Instagram, Facebook and Bluesky, and local
+audio or video files.
 Read the [CLI docs](https://transcript1.com/docs/cli) for setup, batch inputs and output options.
 
 ## Install
@@ -44,9 +45,13 @@ page. Pasted keys must be revoked on that page.
 
 ```sh
 transcript1 'https://youtu.be/dQw4w9WgXcQ'
+transcript1 'https://x.com/jack/status/20'
 transcript1 -f srt -o interview.srt interview.mp3
 transcript1 -o transcripts/ ./recordings
 ```
+
+Links from YouTube, X, TikTok, Instagram, Facebook and Bluesky work, including short share links. Only public posts can
+be fetched. If a post has several videos, the first one is transcribed. `--source captions` works with YouTube links only.
 
 By default, one input prints to stdout. Several inputs save one file each in `./transcripts`. Run `transcript1 --help`
 (or `transcript1` alone) for every flag. `t1` is a short alias for `transcript1`.
@@ -68,6 +73,8 @@ Run `transcript1 get <id>` to fetch an earlier transcription.
 ```sh
 transcript1 update
 ```
+
+Versions 1.0.1 and older accept YouTube links only. Update to use the other platforms.
 
 ## Exit codes
 

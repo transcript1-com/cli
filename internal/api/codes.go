@@ -29,6 +29,8 @@ const (
 	CodeNoCaptions          = "no_captions"
 	CodeMediaTooLong        = "media_too_long"
 	CodeNoSpeech            = "no_speech"
+	CodeLoginRequired       = "login_required"
+	CodeNoAudio             = "no_audio"
 	CodeUnsupportedLanguage = "unsupported_language"
 	CodeFetchFailed         = "fetch_failed"
 	CodeTranscriptionFailed = "transcription_failed"

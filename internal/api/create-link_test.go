@@ -59,7 +59,19 @@ func TestCreateLinkRequest(t *testing.T) {
 			t.Fatalf("user agent %q", got.Header.Get("User-Agent"))
 		}
 
-		want := `{"platform":"youtube","url":"` + url + `","source":"auto","language":"auto","diarize":false}`
+		want := `{"url":"` + url + `","source":"auto","language":"auto","diarize":false}`
+		if body != want {
+			t.Fatalf("body %s", body)
+		}
+	})
+
+	t.Run("sends no platform for a link from another site", func(t *testing.T) {
+		link := "https://x.com/jack/status/20"
+		if _, err := c.CreateLink(context.Background(), "idem-x", link, CreateOptions{}, 0, false); err != nil {
+			t.Fatal(err)
+		}
+
+		want := `{"url":"https://x.com/jack/status/20","source":"auto","language":"auto","diarize":false}`
 		if body != want {
 			t.Fatalf("body %s", body)
 		}
@@ -90,7 +102,7 @@ func TestCreateLinkRequest(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		want := `{"platform":"youtube","url":"` + url + `","source":"stt","language":"de","diarize":true}`
+		want := `{"url":"` + url + `","source":"stt","language":"de","diarize":true}`
 		if body != want {
 			t.Fatalf("body %s", body)
 		}

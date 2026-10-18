@@ -10,7 +10,7 @@ import (
 func Name(in inputs.Input, title, format string, fullName bool) string {
 	ext := Ext(format)
 	if in.Kind == inputs.Link {
-		return Sanitize(title) + " [" + in.VideoID + "]" + ext
+		return Sanitize(title) + " [" + Sanitize(in.VideoID) + "]" + ext
 	}
 
 	if fullName {

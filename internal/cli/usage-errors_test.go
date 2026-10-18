@@ -29,7 +29,7 @@ func TestUsageErrors(t *testing.T) {
 			want: "--speakers",
 		},
 		{name: "an unknown source", args: []string{"--source", "magic", rickLink}, want: "magic"},
-		{name: "an unsupported link", args: []string{"https://example.com/watch?v=1"}, want: "YouTube"},
+		{name: "an unsupported link", args: []string{"https://example.com/watch?v=1"}, want: "Only YouTube, X, TikTok, Instagram, Facebook and Bluesky links"},
 		{
 			name:  "an unsupported extension",
 			setup: func(h *harness) { h.write("notes.txt", "hi") },
@@ -57,7 +57,7 @@ func TestUsageErrors(t *testing.T) {
 		{name: "a file pattern with no match", args: []string{"nope/*.mp3"}, want: "no files match nope/*.mp3"},
 		{name: "zero jobs", args: []string{"--jobs", "0", rickLink}, want: "--jobs"},
 		{name: "too many jobs", args: []string{"--jobs", "21", rickLink}, want: "--jobs"},
-		{name: "no inputs", args: []string{"-"}, want: "no inputs: pass a YouTube link, a file or a folder"},
+		{name: "no inputs", args: []string{"-"}, want: "no inputs: pass a YouTube, X, TikTok, Instagram, Facebook or Bluesky link, a file or a folder"},
 		{
 			name:  "an output folder under a file",
 			setup: func(h *harness) { h.write("blocker", "x") },
@@ -104,4 +104,18 @@ func TestUsageErrors(t *testing.T) {
 			t.Fatalf("stderr %q", got.stderr)
 		}
 	})
+}
+
+func TestValidateCaptionsNonYouTube(t *testing.T) {
+	h := newHarness(t)
+	link := "https://vm.tiktok.com/ZMabcdEF"
+	got := h.run("--source", "captions", link)
+	if got.code != 2 {
+		t.Fatalf("code %d stdout %q stderr %q", got.code, got.stdout, got.stderr)
+	}
+
+	expectContains(t, got.stderr, "--source captions works with YouTube links only, and "+link+" is not one")
+	if log := h.srv.Log(); len(log) != 0 {
+		t.Fatalf("requests sent: %v", log)
+	}
 }

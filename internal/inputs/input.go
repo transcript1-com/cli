@@ -8,11 +8,12 @@ const (
 )
 
 type Input struct {
-	Raw     string
-	Kind    Kind
-	URL     string
-	VideoID string
-	Path    string
-	Name    string
-	Size    int64
+	Raw      string
+	Kind     Kind
+	Platform string
+	URL      string
+	VideoID  string
+	Path     string
+	Name     string
+	Size     int64
 }

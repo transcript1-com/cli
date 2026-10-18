@@ -7,7 +7,6 @@ import (
 )
 
 type createLinkBody struct {
-	Platform string `json:"platform"`
 	URL      string `json:"url"`
 	Source   string `json:"source"`
 	Language string `json:"language"`
@@ -21,7 +20,6 @@ func (c *Client) CreateLink(ctx context.Context, idemKey, link string, opt Creat
 	}
 
 	body := createLinkBody{
-		Platform: "youtube",
 		URL:      link,
 		Source:   opt.getSource(),
 		Language: opt.getLanguage(),

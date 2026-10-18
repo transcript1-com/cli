@@ -16,7 +16,8 @@ var allCodes = []string{
 	api.CodeInternalError, api.CodeServiceUnavailable,
 	api.CodeMediaUnavailable, api.CodeMediaPrivate, api.CodeAgeRestricted, api.CodeLiveStream,
 	api.CodeNoCaptions, api.CodeMediaTooLong, api.CodeNoSpeech, api.CodeUnsupportedLanguage,
-	api.CodeFetchFailed, api.CodeTranscriptionFailed, api.CodeUploadTokenRefused, "http_502",
+	api.CodeFetchFailed, api.CodeTranscriptionFailed, api.CodeUploadTokenRefused, api.CodeLoginRequired, api.CodeNoAudio,
+	"http_502",
 }
 
 var mcpOnly = []string{
@@ -55,8 +56,10 @@ func TestEveryCodeHasANextStep(t *testing.T) {
 
 func TestNextStepWording(t *testing.T) {
 	cases := map[string]string{
-		api.CodeInvalidURL: "Pass a single YouTube video link " +
-			"(youtube.com/watch?v=…, youtu.be/…, /shorts/, /embed/ or /live/)",
+		api.CodeInvalidURL:          "Pass a link to one video or post from YouTube, X, TikTok, Instagram, Facebook or Bluesky",
+		api.CodeMediaUnavailable:    "YouTube, X, TikTok, Instagram, Facebook or Bluesky link is right",
+		api.CodeLoginRequired:       "Only public posts can be fetched; if you have the file, run transcript1 <file>",
+		api.CodeNoAudio:             "The video has no sound track (nothing was charged); pick a post with audio",
 		api.CodeMediaPrivate:        "if you have the file, run transcript1 <file>",
 		api.CodeAgeRestricted:       "if you have the file, run transcript1 <file>",
 		api.CodeNoCaptions:          "Run again with --source auto or --source stt",
@@ -98,6 +101,13 @@ func TestNextStepUsesErrorDetails(t *testing.T) {
 			"supported_platforms": []any{"youtube", "vimeo"},
 		}}
 		if got := NextStep(e); !strings.Contains(got, "youtube, vimeo") {
+			t.Fatalf("NextStep = %q", got)
+		}
+	})
+
+	t.Run("unsupported platform without a list names the six platforms", func(t *testing.T) {
+		got := NextStep(&api.Error{Code: api.CodeUnsupportedPlatform})
+		if !strings.Contains(got, "youtube, x, tiktok, instagram, facebook, bluesky") {
 			t.Fatalf("NextStep = %q", got)
 		}
 	})

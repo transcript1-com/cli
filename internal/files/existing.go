@@ -9,13 +9,19 @@ import (
 )
 
 func Existing(dir string, in inputs.Input, format string, fullName bool) (string, bool) {
+	if in.Kind == inputs.Link {
+		if in.VideoID == "" {
+			return "", false
+		}
+	}
+
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return "", false
 	}
 
 	exact := Name(in, "", format, fullName)
-	suffix := " [" + in.VideoID + "]" + Ext(format)
+	suffix := " [" + Sanitize(in.VideoID) + "]" + Ext(format)
 	for _, e := range entries {
 		if e.IsDir() {
 			continue

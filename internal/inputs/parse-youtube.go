@@ -54,6 +54,12 @@ func findVideoID(u *url.URL, host string, segments []string) string {
 	return segments[1]
 }
 
+func readYouTubeHost(host string) (string, bool) {
+	host = strings.TrimPrefix(host, "www.")
+
+	return host, youtubeHosts[host]
+}
+
 func ParseYouTube(raw string) (videoID, canonical string, ok bool) {
 	u, err := url.Parse(raw)
 	if err != nil {
@@ -64,8 +70,8 @@ func ParseYouTube(raw string) (videoID, canonical string, ok bool) {
 		return "", "", false
 	}
 
-	host := strings.TrimPrefix(strings.ToLower(u.Hostname()), "www.")
-	if !youtubeHosts[host] {
+	host, ok := readYouTubeHost(strings.ToLower(u.Hostname()))
+	if !ok {
 		return "", "", false
 	}
 
