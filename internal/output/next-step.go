@@ -74,6 +74,9 @@ var steps = map[string]func(e *api.Error) string{
 	api.CodeNoSpeech: func(*api.Error) string {
 		return "No speech was detected (nothing was charged); check that the media has audible speech"
 	},
+	api.CodeUnsupportedLanguage: func(*api.Error) string {
+		return "Set --language to a supported code or auto, or check the language spoken in the media"
+	},
 	api.CodeFetchFailed: func(*api.Error) string {
 		return "Fetching the media failed after several attempts (nothing was charged); retry later"
 	},

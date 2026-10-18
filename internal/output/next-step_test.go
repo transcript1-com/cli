@@ -15,8 +15,8 @@ var allCodes = []string{
 	api.CodeIdempotencyConflict, api.CodeMediaTooLarge, api.CodeRateLimited, api.CodeTooManyActiveJobs,
 	api.CodeInternalError, api.CodeServiceUnavailable,
 	api.CodeMediaUnavailable, api.CodeMediaPrivate, api.CodeAgeRestricted, api.CodeLiveStream,
-	api.CodeNoCaptions, api.CodeMediaTooLong, api.CodeNoSpeech, api.CodeFetchFailed,
-	api.CodeTranscriptionFailed, api.CodeUploadTokenRefused, "http_502",
+	api.CodeNoCaptions, api.CodeMediaTooLong, api.CodeNoSpeech, api.CodeUnsupportedLanguage,
+	api.CodeFetchFailed, api.CodeTranscriptionFailed, api.CodeUploadTokenRefused, "http_502",
 }
 
 var mcpOnly = []string{
@@ -61,6 +61,7 @@ func TestNextStepWording(t *testing.T) {
 		api.CodeAgeRestricted:       "if you have the file, run transcript1 <file>",
 		api.CodeNoCaptions:          "Run again with --source auto or --source stt",
 		api.CodeMediaTooLong:        "Speech-to-text accepts up to 5 hours; split the media and transcribe the parts",
+		api.CodeUnsupportedLanguage: "Set --language to a supported code or auto, or check the language spoken in the media",
 		api.CodeNotFound:            "Check the id (it starts with tr_)",
 		api.CodeUploadIncomplete:    "Run the command again",
 		api.CodeInvalidState:        "Run the command again",

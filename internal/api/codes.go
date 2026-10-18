@@ -29,6 +29,7 @@ const (
 	CodeNoCaptions          = "no_captions"
 	CodeMediaTooLong        = "media_too_long"
 	CodeNoSpeech            = "no_speech"
+	CodeUnsupportedLanguage = "unsupported_language"
 	CodeFetchFailed         = "fetch_failed"
 	CodeTranscriptionFailed = "transcription_failed"
 )
