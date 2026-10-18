@@ -80,7 +80,7 @@ Versions 1.1.0 and older accept YouTube links only. Update to use the other plat
 
 | Code | Meaning |
 |---|---|
-| 0 | every input succeeded or was skipped because its output file exists |
+| 0 | every input succeeded or was skipped (YouTube links and local files with existing output) |
 | 1 | at least one input failed or was skipped for lack of minutes |
 | 2 | usage or sign-in problem |
 | 130 | interrupted |

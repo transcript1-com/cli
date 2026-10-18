@@ -28,7 +28,8 @@ Flags:
       --jobs <n>                   inputs running at once, 1-20 (default 2)
       --fresh                      do not reuse a link transcription from
                                    the last 24 hours
-      --overwrite                  redo inputs whose output file already exists
+      --overwrite                  redo YouTube links and local files whose
+                                   output file already exists
       --no-wait                    start, print the id and status, and exit
       --json                       one JSON line per input on stdout
   -q, --quiet                      no progress or summary, only errors
