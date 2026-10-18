@@ -12,7 +12,7 @@ const (
 
 // mirrors the name the api gives a key created by the browser login
 func buildKeyName(hostname string) string {
-	host := strings.Map(dropControl, hostname)
+	host := strings.Map(dropInvisible, hostname)
 	host = strings.TrimSpace(host)
 	runes := []rune(host)
 	if len(runes) > maxHostRunes {
@@ -27,8 +27,21 @@ func buildKeyName(hostname string) string {
 	return keyNamePrefix + host + ")"
 }
 
-func dropControl(r rune) rune {
-	if unicode.IsControl(r) {
+// same set as the api: Cc, Cf, Zl and Zp
+func dropInvisible(r rune) rune {
+	if unicode.Is(unicode.Cc, r) {
+		return -1
+	}
+
+	if unicode.Is(unicode.Cf, r) {
+		return -1
+	}
+
+	if unicode.Is(unicode.Zl, r) {
+		return -1
+	}
+
+	if unicode.Is(unicode.Zp, r) {
 		return -1
 	}
 

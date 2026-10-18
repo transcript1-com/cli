@@ -186,6 +186,13 @@ func TestBuildKeyName(t *testing.T) {
 		{"empty host", "", "transcript1 CLI (unknown host)"},
 		{"trims the end after the cut", strings.Repeat("a", 63) + " b", "transcript1 CLI (" + strings.Repeat("a", 63) + ")"},
 		{"counts runes", strings.Repeat("é", 70), "transcript1 CLI (" + strings.Repeat("é", 64) + ")"},
+		{"drops bidi override", "mba\u202ecod.exe", "transcript1 CLI (mbacod.exe)"},
+		{"drops zero width space", "m\u200bba", "transcript1 CLI (mba)"},
+		{"drops bom", "\ufeffmba", "transcript1 CLI (mba)"},
+		{"drops line and paragraph separators", "m\u2028b\u2029a", "transcript1 CLI (mba)"},
+		{"only format characters", "\u200b\u202e", "transcript1 CLI (unknown host)"},
+		{"keeps inner spaces", "my  mac", "transcript1 CLI (my  mac)"},
+		{"strips before counting", strings.Repeat("a\u200b", 70), "transcript1 CLI (" + strings.Repeat("a", 64) + ")"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
