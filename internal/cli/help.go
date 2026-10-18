@@ -5,8 +5,8 @@ const helpText = `transcript1 transcribes YouTube links and local audio or video
 Usage:
   transcript1 [flags] <input>...   transcribe links, files or folders
   transcript1 get [flags] <id>     fetch an earlier transcription and wait if it is still running
-  transcript1 login                check and save an API key
-  transcript1 logout               remove the saved key
+  transcript1 login                sign in through the browser
+  transcript1 logout               sign out and revoke the CLI key
   transcript1 update               install the latest release
   transcript1 --version | --help
 
@@ -29,6 +29,7 @@ Flags:
   -q, --quiet                      no progress or summary, only errors
 
 get accepts -f, -o, --timestamps, --no-wait, --json and -q.
+login accepts --with-key (paste an API key) and --no-browser (only print the link).
 
 Examples:
   transcript1 'https://youtu.be/dQw4w9WgXcQ'
