@@ -24,7 +24,7 @@ var (
 	formats = []string{files.FormatText, files.FormatSRT, files.FormatVTT, files.FormatJSON}
 	sources = []string{sourceAuto, sourceCaptions, sourceSTT}
 
-	errNoInputs   = errors.New("no inputs: pass a YouTube, X, TikTok, Instagram, Facebook or Bluesky link, a file or a folder")
+	errNoInputs   = errors.New("no inputs: pass a YouTube, X, TikTok, Instagram, Facebook or Bluesky link or a local file or folder")
 	errTimestamps = errors.New("--timestamps works with --format text only")
 	errSpeakers   = errors.New("--speakers needs speech-to-text and cannot be used with --source captions")
 )

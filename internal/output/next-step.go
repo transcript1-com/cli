@@ -31,7 +31,7 @@ var steps = map[string]func(e *api.Error) string{
 		return "Check the input and options (transcript1 --help), then try again"
 	},
 	api.CodeInvalidURL: func(*api.Error) string {
-		return "Pass a link to one video or post from " + platformNames + ", not a profile or playlist"
+		return "Use a " + platformNames + " link to a video or post, not a profile or playlist"
 	},
 	api.CodeUnsupportedPlatform: unsupportedPlatform,
 	api.CodeUnsupportedMedia: func(*api.Error) string {
@@ -61,7 +61,7 @@ var steps = map[string]func(e *api.Error) string{
 		return "transcript1 is temporarily unavailable; retry in a minute"
 	},
 	api.CodeMediaUnavailable: func(*api.Error) string {
-		return "Check that the " + platformNames + " link is right and the video plays without signing in"
+		return "Open the " + platformNames + " link and check that the video plays without signing in"
 	},
 	api.CodeMediaPrivate: func(*api.Error) string {
 		return "Only public or unlisted videos can be fetched; " + haveFileStep

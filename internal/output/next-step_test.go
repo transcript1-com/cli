@@ -56,8 +56,8 @@ func TestEveryCodeHasANextStep(t *testing.T) {
 
 func TestNextStepWording(t *testing.T) {
 	cases := map[string]string{
-		api.CodeInvalidURL:          "Pass a link to one video or post from YouTube, X, TikTok, Instagram, Facebook or Bluesky",
-		api.CodeMediaUnavailable:    "YouTube, X, TikTok, Instagram, Facebook or Bluesky link is right",
+		api.CodeInvalidURL:          "Use a YouTube, X, TikTok, Instagram, Facebook or Bluesky link to a video or post, not a profile or playlist",
+		api.CodeMediaUnavailable:    "Open the YouTube, X, TikTok, Instagram, Facebook or Bluesky link and check that the video plays without signing in",
 		api.CodeLoginRequired:       "Only public posts can be fetched; if you have the file, run transcript1 <file>",
 		api.CodeNoAudio:             "The video has no sound track (nothing was charged); pick a post with audio",
 		api.CodeMediaPrivate:        "if you have the file, run transcript1 <file>",

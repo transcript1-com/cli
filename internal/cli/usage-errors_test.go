@@ -57,7 +57,7 @@ func TestUsageErrors(t *testing.T) {
 		{name: "a file pattern with no match", args: []string{"nope/*.mp3"}, want: "no files match nope/*.mp3"},
 		{name: "zero jobs", args: []string{"--jobs", "0", rickLink}, want: "--jobs"},
 		{name: "too many jobs", args: []string{"--jobs", "21", rickLink}, want: "--jobs"},
-		{name: "no inputs", args: []string{"-"}, want: "no inputs: pass a YouTube, X, TikTok, Instagram, Facebook or Bluesky link, a file or a folder"},
+		{name: "no inputs", args: []string{"-"}, want: "no inputs: pass a YouTube, X, TikTok, Instagram, Facebook or Bluesky link or a local file or folder"},
 		{
 			name:  "an output folder under a file",
 			setup: func(h *harness) { h.write("blocker", "x") },
