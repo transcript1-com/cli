@@ -81,7 +81,7 @@ Set up releases once:
    credentials, or `wrangler login`, in the shell that runs releases.
 2. `go run ./cmd/release-tool keygen <path outside the repo>`. Commit `internal/update/release-key.pub`, back up the
    private key, and keep its path in `TRANSCRIPT1_RELEASE_KEY_FILE`.
-3. Optional: create the GitHub repo `transcript1/cli` and run `gh auth login` for the mirror.
+3. Optional: create the GitHub repo `transcript1-com/cli` and run `gh auth login` for the mirror.
 4. Run `scripts/release.sh 1.0.0`, then deploy the site.
 
 `scripts/release.sh <version>` (strictly `x.y.z`) checks the working tree, runs vet and tests, builds the five targets,
@@ -107,7 +107,7 @@ archives. Run
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | R2 credentials for `aws` |
 | `R2_RELEASE_DRY_RUN=1` | build, package and sign, print the uploads, skip R2 and the tag |
 | `R2_RELEASE_RESUME=1` | skip the versioned uploads, verify them, publish `latest.json` |
-| `GITHUB_MIRROR_REPO` | default `transcript1/cli`, used by the mirror script |
+| `GITHUB_MIRROR_REPO` | default `transcript1-com/cli`, used by the mirror script |
 
 ## License
 

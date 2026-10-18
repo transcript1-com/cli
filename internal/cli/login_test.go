@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/transcript1/cli/internal/config"
+	"github.com/transcript1-com/cli/internal/config"
 )
 
 func loadSavedKey(t *testing.T) string {

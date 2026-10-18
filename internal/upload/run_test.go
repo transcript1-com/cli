@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/transcript1/cli/internal/api"
-	"github.com/transcript1/cli/internal/fakeapi"
-	"github.com/transcript1/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/fakeapi"
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 const testSize = 50

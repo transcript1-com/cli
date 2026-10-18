@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/transcript1/cli/internal/config"
+	"github.com/transcript1-com/cli/internal/config"
 )
 
 func TestUsageErrors(t *testing.T) {

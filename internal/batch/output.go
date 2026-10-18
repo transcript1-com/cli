@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"path/filepath"
 
-	"github.com/transcript1/cli/internal/files"
+	"github.com/transcript1-com/cli/internal/files"
 )
 
 func (r *runner) isToFile() bool {

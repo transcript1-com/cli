@@ -147,7 +147,7 @@ grep -F -q "scripts/mirror-release-github.sh $VERSION" "$TMP/mirror-fail.txt" ||
 rm -f "$TMP/gh-mirror.log"
 run_mirror 0 > "$TMP/mirror-ok.txt" 2>&1 || fail 'mirror exited non-zero' "$TMP/mirror-ok.txt"
 create=$(grep -F 'release create' "$TMP/gh-mirror.log") || fail 'gh release create was not called' "$TMP/gh-mirror.log"
-for want in "v$VERSION" '--verify-tag' '--repo transcript1/cli' "--notes transcript1 $VERSION" checksums.txt $ARCHIVES; do
+for want in "v$VERSION" '--verify-tag' '--repo transcript1-com/cli' "--notes transcript1 $VERSION" checksums.txt $ARCHIVES; do
   [[ "$create" == *"$want"* ]] || fail "gh release create is missing: $want" "$TMP/gh-mirror.log"
 done
 

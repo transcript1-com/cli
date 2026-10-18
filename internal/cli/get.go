@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/transcript1/cli/internal/api"
-	"github.com/transcript1/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/batch"
 )
 
 var errGetUsage = errors.New("get takes one transcription id: transcript1 get [flags] <id>")

@@ -7,9 +7,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/transcript1/cli/internal/api"
-	"github.com/transcript1/cli/internal/batch"
-	"github.com/transcript1/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 func buildFileInput(name string) inputs.Input {

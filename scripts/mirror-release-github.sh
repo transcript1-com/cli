@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 VERSION="${1:?usage: scripts/mirror-release-github.sh <version>}"
 OUT="${R2_RELEASE_DIST_DIR:-$ROOT/dist}/$VERSION"
-REPO="${GITHUB_MIRROR_REPO:-transcript1/cli}"
+REPO="${GITHUB_MIRROR_REPO:-transcript1-com/cli}"
 
 create_release() {
   gh auth status >/dev/null 2>&1 || return 1

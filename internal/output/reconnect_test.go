@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/transcript1/cli/internal/api"
-	"github.com/transcript1/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/batch"
 )
 
 func buildRunning() *api.Transcription {

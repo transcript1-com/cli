@@ -7,8 +7,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/transcript1/cli/internal/batch"
-	"github.com/transcript1/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 const longLink = "https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PLabcdefghijklmnopqrstuvwxyz0123456789"

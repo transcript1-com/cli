@@ -3,7 +3,7 @@ package cli
 import (
 	"context"
 
-	"github.com/transcript1/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/batch"
 )
 
 const (

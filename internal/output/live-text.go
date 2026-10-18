@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"unicode/utf8"
 
-	"github.com/transcript1/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/batch"
 )
 
 func (r *Reporter) buildLiveText(e batch.Event) string {

@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/transcript1/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 func Name(in inputs.Input, title, format string, fullName bool) string {

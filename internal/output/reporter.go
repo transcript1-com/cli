@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/transcript1/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/batch"
 )
 
 type Reporter struct {

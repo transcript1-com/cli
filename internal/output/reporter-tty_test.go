@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/transcript1/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/batch"
 )
 
 func TestTTYRedraws(t *testing.T) {

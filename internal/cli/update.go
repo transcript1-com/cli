@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/transcript1/cli/internal/config"
-	selfupdate "github.com/transcript1/cli/internal/update"
-	"github.com/transcript1/cli/internal/version"
+	"github.com/transcript1-com/cli/internal/config"
+	selfupdate "github.com/transcript1-com/cli/internal/update"
+	"github.com/transcript1-com/cli/internal/version"
 )
 
 const (

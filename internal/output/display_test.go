@@ -3,7 +3,7 @@ package output
 import (
 	"testing"
 
-	"github.com/transcript1/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 func TestDisplay(t *testing.T) {

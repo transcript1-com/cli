@@ -19,7 +19,7 @@ IMMUTABLE_CACHE='public, max-age=31536000, immutable'
 CURRENT_CACHE='public, max-age=300'
 RELEASE_PREFIX="cli/releases/$VERSION"
 TARGETS='darwin/arm64 darwin/amd64 linux/amd64 linux/arm64 windows/amd64'
-LDFLAGS="-s -w -X github.com/transcript1/cli/internal/version.Version=$VERSION"
+LDFLAGS="-s -w -X github.com/transcript1-com/cli/internal/version.Version=$VERSION"
 CHECK_DIR=''
 
 die() {

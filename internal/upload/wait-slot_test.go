@@ -6,8 +6,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/transcript1/cli/internal/api"
-	"github.com/transcript1/cli/internal/fakeapi"
+	"github.com/transcript1-com/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/fakeapi"
 )
 
 func holdTheOnlySlot(t *testing.T, srv *fakeapi.Server, c *api.Client) *api.Transcription {

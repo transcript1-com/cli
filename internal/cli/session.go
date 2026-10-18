@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/transcript1/cli/internal/batch"
-	"github.com/transcript1/cli/internal/output"
+	"github.com/transcript1-com/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/output"
 )
 
 const msgStillRunning = "still running: %s (%s), fetch with transcript1 get %s\n"

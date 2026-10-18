@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/transcript1/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/api"
 )
 
 const errUnplannedChunk = "the server reported chunk %v missing, which is not in the upload plan: %w"

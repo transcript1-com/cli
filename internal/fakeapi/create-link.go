@@ -6,8 +6,8 @@ import (
 	"slices"
 	"time"
 
-	"github.com/transcript1/cli/internal/api"
-	"github.com/transcript1/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 func needsSpeechToText(body createBody) bool {

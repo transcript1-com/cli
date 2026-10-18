@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/transcript1/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/api"
 )
 
 type badKeyAfterFirstCreate struct {

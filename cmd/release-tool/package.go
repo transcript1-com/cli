@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/transcript1/cli/internal/update"
+	"github.com/transcript1-com/cli/internal/update"
 )
 
 var errPackageUsage = errors.New("usage: release-tool package --version <x.y.z> --dist <dir> [--root <dir>]")

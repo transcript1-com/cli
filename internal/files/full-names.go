@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/transcript1/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 const errSameFileTemplate = "%s and %s would write the same file; run them separately"

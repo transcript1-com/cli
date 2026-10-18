@@ -6,8 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/transcript1/cli/internal/cli"
-	"github.com/transcript1/cli/internal/update"
+	"github.com/transcript1-com/cli/internal/cli"
+	"github.com/transcript1-com/cli/internal/update"
 	"golang.org/x/term"
 )
 

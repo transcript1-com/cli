@@ -6,7 +6,7 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/transcript1/cli/internal/config"
+	"github.com/transcript1-com/cli/internal/config"
 )
 
 const (

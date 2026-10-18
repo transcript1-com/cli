@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/transcript1/cli/internal/api"
-	"github.com/transcript1/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 const msgUploadRequired = "upload.filename and a positive upload.size are required"

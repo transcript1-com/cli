@@ -8,9 +8,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/transcript1/cli/internal/api"
-	"github.com/transcript1/cli/internal/config"
-	"github.com/transcript1/cli/internal/output"
+	"github.com/transcript1-com/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/config"
+	"github.com/transcript1-com/cli/internal/output"
 )
 
 const (

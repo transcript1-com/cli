@@ -16,7 +16,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/transcript1/cli/internal/update"
+	"github.com/transcript1-com/cli/internal/update"
 )
 
 type tool struct {

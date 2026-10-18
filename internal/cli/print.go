@@ -5,9 +5,9 @@ import (
 	"io"
 	"sync"
 
-	"github.com/transcript1/cli/internal/batch"
-	"github.com/transcript1/cli/internal/inputs"
-	"github.com/transcript1/cli/internal/output"
+	"github.com/transcript1-com/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/output"
 )
 
 type printer struct {

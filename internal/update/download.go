@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/transcript1/cli/internal/version"
+	"github.com/transcript1-com/cli/internal/version"
 )
 
 const (

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/transcript1/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/api"
 )
 
 const (

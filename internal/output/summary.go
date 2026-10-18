@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/transcript1/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/batch"
 )
 
 func buildSummaryLine(results []batch.Result) string {

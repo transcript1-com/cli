@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/transcript1/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/api"
 )
 
 func TestFetch(t *testing.T) {

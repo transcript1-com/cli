@@ -3,7 +3,7 @@ package output
 import (
 	"fmt"
 
-	"github.com/transcript1/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/batch"
 )
 
 func buildStageText(e batch.Event, withPercent bool) string {

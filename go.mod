@@ -1,4 +1,4 @@
-module github.com/transcript1/cli
+module github.com/transcript1-com/cli
 
 go 1.27.0
 

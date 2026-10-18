@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/transcript1/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 func buildFileInput(path string) inputs.Input {

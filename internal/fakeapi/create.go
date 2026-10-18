@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/transcript1/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/api"
 )
 
 const billingURL = "https://transcript1.com/dashboard/billing"

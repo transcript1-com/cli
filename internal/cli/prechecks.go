@@ -7,10 +7,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/transcript1/cli/internal/api"
-	"github.com/transcript1/cli/internal/batch"
-	"github.com/transcript1/cli/internal/config"
-	"github.com/transcript1/cli/internal/files"
+	"github.com/transcript1-com/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/config"
+	"github.com/transcript1-com/cli/internal/files"
 )
 
 const (

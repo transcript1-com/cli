@@ -3,9 +3,9 @@ package cli
 import (
 	"context"
 
-	"github.com/transcript1/cli/internal/batch"
-	"github.com/transcript1/cli/internal/files"
-	"github.com/transcript1/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/files"
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 func transcribe(ctx context.Context, args []string, env Env) int {

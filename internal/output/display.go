@@ -3,7 +3,7 @@ package output
 import (
 	"path/filepath"
 
-	"github.com/transcript1/cli/internal/inputs"
+	"github.com/transcript1-com/cli/internal/inputs"
 )
 
 func Display(in inputs.Input) string {

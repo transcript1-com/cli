@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/transcript1/cli/internal/batch"
+	"github.com/transcript1-com/cli/internal/batch"
 )
 
 func buildFinalText(res batch.Result) (text, color string) {

@@ -3,7 +3,7 @@ package batch
 import (
 	"slices"
 
-	"github.com/transcript1/cli/internal/api"
+	"github.com/transcript1-com/cli/internal/api"
 )
 
 const hintPrefix = "fetch with transcript1 get "
