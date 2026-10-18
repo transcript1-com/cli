@@ -44,7 +44,9 @@ transcript1 -o transcripts/ ./recordings
 By default, one input prints to stdout. Several inputs save one file each in `./transcripts`. Run `transcript1 --help`
 (or `transcript1` alone) for every flag. `t1` is a short alias for `transcript1`.
 
-Tip: in zsh, quote links that contain `?` or `&`, or use the alias the installer adds.
+File patterns like `recordings/*.mp3` work, also on Windows.
+
+Tip: in zsh, quote links. An unquoted `&` splits the command, and `?` is a glob unless you use the alias the installer adds.
 
 Use `--json` to print one JSON line per input to stdout, with no progress or summary:
 

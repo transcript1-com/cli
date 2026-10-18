@@ -35,7 +35,8 @@ Examples:
   transcript1 -f srt -o interview.srt interview.mp3
   transcript1 -o transcripts/ ./recordings
 
-Tip: in zsh, quote links that contain ? or &, or use the alias the installer adds.
+File patterns like recordings/*.mp3 work, also on Windows.
+Tip: in zsh, quote links. An unquoted & splits the command, and ? is a glob unless you use the alias the installer adds.
 t1 is a short alias for transcript1.
 Sign in first with transcript1 login, or set TRANSCRIPT1_API_KEY.
 `

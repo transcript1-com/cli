@@ -203,7 +203,8 @@ func TestHelpAndVersion(t *testing.T) {
 		}
 
 		expectContains(t, got.stdout, "transcript1 get", "transcript1 login", "transcript1 logout", "transcript1 update",
-			"--version", "--format", "--jobs", "Examples:", "transcript1 'https://youtu.be/", "t1 is a short alias", "in zsh, quote links")
+			"--version", "--format", "--jobs", "Examples:", "transcript1 'https://youtu.be/", "t1 is a short alias", "in zsh, quote links",
+			"recordings/*.mp3")
 		_, examples, _ := strings.Cut(got.stdout, "Examples:")
 		if n := strings.Count(examples, "\n  transcript1 "); n != 3 {
 			t.Fatalf("examples %d in %q", n, got.stdout)
