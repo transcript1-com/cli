@@ -74,7 +74,7 @@ Run `transcript1 get <id>` to fetch an earlier transcription.
 transcript1 update
 ```
 
-Versions 1.0.1 and older accept YouTube links only. Update to use the other platforms.
+Versions 1.1.0 and older accept YouTube links only. Update to use the other platforms.
 
 ## Exit codes
 

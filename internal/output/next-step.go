@@ -2,6 +2,7 @@ package output
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -123,11 +124,11 @@ func actionURL(e *api.Error) string {
 func listPlatforms(e *api.Error) []string {
 	list, ok := e.Details["supported_platforms"].([]any)
 	if !ok {
-		return defaultPlatforms
+		return slices.Clone(defaultPlatforms)
 	}
 
 	if len(list) == 0 {
-		return defaultPlatforms
+		return slices.Clone(defaultPlatforms)
 	}
 
 	platforms := []string{}
