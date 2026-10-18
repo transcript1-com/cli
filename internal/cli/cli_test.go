@@ -223,7 +223,7 @@ func TestHelpAndVersion(t *testing.T) {
 	})
 }
 
-func TestUpdateNotConfigured(t *testing.T) {
+func TestUpdateDevBuild(t *testing.T) {
 	h := newHarness(t)
 	got := h.run("update")
 	if got.code != 1 {
@@ -234,7 +234,7 @@ func TestUpdateNotConfigured(t *testing.T) {
 		t.Fatalf("code %d stdout %q stderr %q", got.code, got.stdout, got.stderr)
 	}
 
-	expectContains(t, got.stderr, "updates are not configured in this build")
+	expectContains(t, got.stderr, "this dev build does not update itself")
 }
 
 const noticeLine = "transcript1 1.2.0 is available. Run transcript1 update."

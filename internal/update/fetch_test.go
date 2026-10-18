@@ -3,6 +3,7 @@ package update
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
 	"net/http"
 	"strings"
 	"testing"
@@ -75,9 +76,14 @@ func TestPublicKey(t *testing.T) {
 		}
 	})
 
-	t.Run("ships the placeholder until keygen runs", func(t *testing.T) {
-		if _, err := PublicKey(); err != ErrNotConfigured {
+	t.Run("ships a release key", func(t *testing.T) {
+		key, err := PublicKey()
+		if err != nil {
 			t.Fatalf("err %v", err)
+		}
+
+		if len(key) != ed25519.PublicKeySize {
+			t.Fatalf("key length %d", len(key))
 		}
 	})
 }
